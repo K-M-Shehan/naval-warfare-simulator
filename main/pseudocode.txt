@@ -24,4 +24,17 @@ air resistance is thrown out of the window as usual
 Battleship should destroy as many escorts as possible.
 Battleship must try to minimize impact on itself from the attacks from escort ships.
 
-
+[*] Features
+Horizontal angle: guns in both types of ships can move in any direction within plane
+Vertical angle: 
+  battleship - any angle
+  escort ship - differs for each type of ship
+Initial speed of shell: differs for each ship
+Max speed of battleship shell: user specified
+Min speed of battleship shell: 0
+2D canvas: should be a square
+Number of escort ships: decided with user input
+Positions of escort ships: randomly generated
+Type deployed: randomly selected from database
+Randomly generated numbers: maximum must be decided beforehand
+Battleship starting position: given by user or 
