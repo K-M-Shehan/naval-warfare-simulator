@@ -1,0 +1,27 @@
+[*] Overview
+1 Battleship and several escorts.
+
+4 different battleships
+5 different escort ships
+
+Battleship belongs to the allies
+Escort ships belong to the axis powers
+
+
+Each escort ship represents both the escort ship and passenger ship. (passenger ships are protected by escort ships)
+
+battleship has 1 gun
+escort ship also has only 1 gun
+
+shell will follow typical parabloic projectile motion under the effect of gravity
+
+if shell hits something it should bakudan when it hits the target
+this is an impact
+
+air resistance is thrown out of the window as usual
+
+[*] Objective
+Battleship should destroy as many escorts as possible.
+Battleship must try to minimize impact on itself from the attacks from escort ships.
+
+
