@@ -8,6 +8,27 @@
 4 different battleships
 5 different escort ships
 
+Battleships:
+| Name                 | Notation | Shell Velocity |
+|----------------------|----------|----------------|
+| USS Iowa (BB-61)     | U        | v (rand)       |
+| MS King George V     | M        | v (rand)       |
+| Richelieu            | R        | v (rand)       |
+| Sovetsky Soyuz-class | S        | v (rand)       |
+
+Escort ships:
+| Name                    | Notation      | Angle Range | Impact Power | Shell Velocity |
+|-------------------------|---------------|-------------|--------------|----------------|
+| 1936A class Destroyer   | E<sub>A</sub> | 20          | 0.08         | v * 1.2        |
+| Gabbiano class Corvette | E<sub>B</sub> | 30          | 0.06         | e (rand)       |
+| Matsu class Destroyer   | E<sub>C</sub> | 25          | 0.07         | e (rand)       |
+| F class Escort ships    | E<sub>D</sub> | 50          | 0.05         | e (rand)       |
+| Japanese Kaibokan       | E<sub>E</sub> | 70          | 0.04         | e (rand)       |
+
+'NOTE: 
+v = max velocity of a battleship shell
+All e value must be lower than v'
+
 Battleship belongs to the Allies.
 Escort ships belong to the Axis powers.
 
