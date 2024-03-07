@@ -1,5 +1,7 @@
 # naval-warfare-simulator
 
+*insert gif of finished project*
+
 ## Overview
 1 Battleship and several escorts.
 
