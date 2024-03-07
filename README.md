@@ -25,9 +25,10 @@ Escort ships:
 | F class Escort ships    | E<sub>D</sub> | 50          | 0.05         | e (rand)       |
 | Japanese Kaibokan       | E<sub>E</sub> | 70          | 0.04         | e (rand)       |
 
-'NOTE: 
-v = max velocity of a battleship shell
-All e value must be lower than v'
+**NOTE:** 
+* v = max velocity of a battleship shell
+* Angle range = 90 - rand(angle)
+* All e value must be lower than v
 
 Battleship belongs to the Allies.
 Escort ships belong to the Axis powers.
