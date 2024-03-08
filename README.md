@@ -56,7 +56,7 @@ The Battleship must try to minimize the impact on themselves from the attacks fr
 3. Initial speed of shell: differs for each ship
 4. Max speed of battleship shell: user-specified
 5. Min speed of battleship shell: 0
-6. 2D canvas: should be a square
+6. 2D canvas: should be a square (size determined through user input)
 7. Number of escort ships: decided with user input
 8. Positions of escort ships: randomly generated
 9. Type deployed: randomly selected from the database
