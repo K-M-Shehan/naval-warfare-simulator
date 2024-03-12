@@ -7,7 +7,7 @@
 
 ![attack range figure](https://imgur.com/ipYkUbS.jpg)
 
-### *Steps* =>
+### *Steps*
 1. Initial conditions must be saved as a text file.
     * Positions
     * max/min velocity of a battleship shell (v)
