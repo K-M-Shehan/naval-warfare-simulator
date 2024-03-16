@@ -1,27 +1,31 @@
 #include <SDL2/SDL.h>
-#define WINDOW_SIZE 400
+#define WINDOW_SIZE 700
+
+SDL_Window* window = NULL;
+SDL_Renderer* renderer = NULL;
+
+void initializeSDL (void) 
+{
+  // SDL Initialization
+  SDL_Init(SDL_INIT_VIDEO);
+  // Creating a window
+  window = SDL_CreateWindow("Naval Warfare Simulator", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_SIZE, WINDOW_SIZE, SDL_WINDOW_SHOWN);
+  // Creating a renderer for the window
+  renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED); 
+}
+
+void cleanup (void)
+{
+   // Cleanup
+  SDL_DestroyWindow(window);
+  SDL_Quit();
+}
 
 int main (void) 
 {
+  initializeSDL();
 
-  // Initialize SDL
-  if (SDL_Init(SDL_INIT_VIDEO) < 0)
-  {
-    printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
-    return 1;
-  }
-
-  // Creating a window
-  SDL_Window* window = SDL_CreateWindow("Naval Warfare Simulator", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_SIZE, WINDOW_SIZE, SDL_WINDOW_SHOWN);
-  
-  // Show error if window is not created
-  if (window == NULL)
-  {
-    printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
-    return 1;
-  }
-
-  // Quiting
+   // Quiting
   int quit = 0;
   SDL_Event e;
 
@@ -36,9 +40,6 @@ int main (void)
     }
   }
 
-  // Cleanup
-  SDL_DestroyWindow(window);
-  SDL_Quit();
-
+  cleanup();
   return 0;
 }
