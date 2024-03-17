@@ -28,18 +28,22 @@ typedef struct
 
 typedef struct
 {
+  int x, y;
+  SDL_Texture *texS;
+} Shell;
+
+typedef struct
+{
   /*Main Sprites*/
   // Escorts
   EscortShip escortA, escortB, escortC, escortD, escortE;   // you could also use an array to draw these
   // Battleships
   Battleship battleU, battleM, battleR, battleS;  // all of these types would use the same sprite
+  // Shell
+  Shell shellB, shellC;
 } SimState;
 
-typedef struct
-{
-  int x, y;
 
-} Shell;
 
 
 void cleanup (SDL_Window* window, SDL_Renderer* renderer)
@@ -223,6 +227,31 @@ void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer)
   sim->escortE.y = rand() % (WINDOW_SIZE - 64);
 }
 
+void drawBattleShell (SDL_Renderer *renderer, SDL_Window *window, SimState *sim)
+{
+  // Load the shell image and put it into a surface
+  SDL_Surface *shellSurface = NULL;
+  shellSurface = IMG_Load("resources/shell.png");
+  if (shellSurface == NULL)
+  {
+    printf("Cannot find shell.png!\n\n");
+    cleanup(window, renderer);
+    exit(1);
+  }
+
+  // Create texture from surface and free surface
+  sim->shellB.texS = SDL_CreateTextureFromSurface(renderer, shellSurface);
+  SDL_FreeSurface(shellSurface);
+
+  // x and y positions of the shell at initial point
+  sim->shellB.x = 65;
+  sim->shellB.y = WINDOW_SIZE - 70;
+
+  SDL_Rect shellBRect = { sim->shellB.x, sim->shellB.y, 10, 10};
+  SDL_RenderCopy(renderer, sim->shellB.texS, NULL, &shellBRect);
+  SDL_RenderPresent(renderer);
+}
+
 int processEvents (SDL_Window* window, SimState *sim) // TODO: include structs in this to move around idk
 {
   SDL_Event event;
@@ -324,6 +353,7 @@ int main (void)
     // Check for events
     done = processEvents(window, &simState);
     doRender(renderer, &simState, 1); // the 3rd arg is the battleship type (using ints for now)
+    drawBattleShell(renderer, window, &simState);
   }
 
   // Free memory
@@ -338,6 +368,7 @@ int main (void)
   SDL_DestroyTexture(simState.escortD.texE);
   SDL_DestroyTexture(simState.escortE.texE);
 
+  SDL_DestroyTexture(simState.shellB.texS);
   cleanup(window, renderer);
   return 0;
 }
