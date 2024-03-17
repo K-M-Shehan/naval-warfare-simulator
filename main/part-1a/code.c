@@ -28,7 +28,7 @@ void initializeSDL (SDL_Window* window, SDL_Renderer* renderer)
   renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC); 
 }
 
-int processEvents (SDL_Window* window)
+int processEvents (SDL_Window* window) // TODO: include structs in this to move around idk
 {
   SDL_Event event;
   int done = 0;
@@ -45,6 +45,11 @@ int processEvents (SDL_Window* window)
       }
 
   return done;
+}
+
+void doRender (SDL_Renderer* renderer) // TODO:  include struct here as well to render the struct, when initializing rect in this use the positions of the struct to do it ma man
+{
+
 }
 
 void cleanup (SDL_Window* window, SDL_Renderer* renderer)
