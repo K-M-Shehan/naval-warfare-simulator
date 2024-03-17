@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <stdbool.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <time.h>
@@ -23,6 +24,7 @@ typedef struct
 {
   int x, y;
   float angle;
+  float v;
   SDL_Texture *texB;
 } Battleship;
 
@@ -42,9 +44,6 @@ typedef struct
   // Shell
   Shell shellB, shellC;
 } SimState;
-
-
-
 
 void cleanup (SDL_Window* window, SDL_Renderer* renderer)
 {
@@ -225,6 +224,12 @@ void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer)
   
   sim->escortE.x = rand() % (WINDOW_SIZE - 64);
   sim->escortE.y = rand() % (WINDOW_SIZE - 64);
+
+  // v of battleships
+  sim->battleU.v = 10;
+  sim->battleM.v = 10;
+  sim->battleR.v = 10;
+  sim->battleS.v = 10;
 }
 
 void drawBattleShell (SDL_Renderer *renderer, SDL_Window *window, SimState *sim)
@@ -250,6 +255,235 @@ void drawBattleShell (SDL_Renderer *renderer, SDL_Window *window, SimState *sim)
   SDL_Rect shellBRect = { sim->shellB.x, sim->shellB.y, 10, 10};
   SDL_RenderCopy(renderer, sim->shellB.texS, NULL, &shellBRect);
   SDL_RenderPresent(renderer);
+}
+
+bool checkCollisionEscortA(SimState *sim)
+{
+  // calculate corner coordinates
+  int escortTopRightX = sim->escortA.x;
+  int escortTopRightY = sim->escortA.y;
+  int escortBotLeftX = sim->escortA.x + (64-1);
+  int escortBotLeftY = sim->escortA.y + (64-1);
+
+  int shellTopRightX = sim->shellB.x;
+  int shellTopRightY = sim->shellB.y;
+  int shellBotLeftX = sim->shellB.x + (64-1);
+  int shellBotLeftY = sim->shellB.y + (64-1);
+
+  // check for collision
+  if ((shellTopRightX <= escortBotLeftX) &&
+      (shellBotLeftX >= escortTopRightX) &&
+      (shellTopRightY <= escortBotLeftY) &&
+      (shellBotLeftY >= escortTopRightY))
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
+bool checkCollisionEscortB(SimState *sim)
+{
+  // calculate corner coordinates
+  int escortTopRightX = sim->escortB.x;
+  int escortTopRightY = sim->escortB.y;
+  int escortBotLeftX = sim->escortB.x + (64-1);
+  int escortBotLeftY = sim->escortB.y + (64-1);
+
+  int shellTopRightX = sim->shellB.x;
+  int shellTopRightY = sim->shellB.y;
+  int shellBotLeftX = sim->shellB.x + (64-1);
+  int shellBotLeftY = sim->shellB.y + (64-1);
+
+  // check for collision
+  if ((shellTopRightX <= escortBotLeftX) &&
+      (shellBotLeftX >= escortTopRightX) &&
+      (shellTopRightY <= escortBotLeftY) &&
+      (shellBotLeftY >= escortTopRightY))
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
+bool checkCollisionEscortC(SimState *sim)
+{
+  // calculate corner coordinates
+  int escortTopRightX = sim->escortC.x;
+  int escortTopRightY = sim->escortC.y;
+  int escortBotLeftX = sim->escortC.x + (64-1);
+  int escortBotLeftY = sim->escortC.y + (64-1);
+
+  int shellTopRightX = sim->shellB.x;
+  int shellTopRightY = sim->shellB.y;
+  int shellBotLeftX = sim->shellB.x + (64-1);
+  int shellBotLeftY = sim->shellB.y + (64-1);
+
+  // check for collision
+  if ((shellTopRightX <= escortBotLeftX) &&
+      (shellBotLeftX >= escortTopRightX) &&
+      (shellTopRightY <= escortBotLeftY) &&
+      (shellBotLeftY >= escortTopRightY))
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
+bool checkCollisionEscortD(SimState *sim)
+{
+  // calculate corner coordinates
+  int escortTopRightX = sim->escortD.x;
+  int escortTopRightY = sim->escortD.y;
+  int escortBotLeftX = sim->escortD.x + (64-1);
+  int escortBotLeftY = sim->escortD.y + (64-1);
+
+  int shellTopRightX = sim->shellB.x;
+  int shellTopRightY = sim->shellB.y;
+  int shellBotLeftX = sim->shellB.x + (64-1);
+  int shellBotLeftY = sim->shellB.y + (64-1);
+
+  // check for collision
+  if ((shellTopRightX <= escortBotLeftX) &&
+      (shellBotLeftX >= escortTopRightX) &&
+      (shellTopRightY <= escortBotLeftY) &&
+      (shellBotLeftY >= escortTopRightY))
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
+bool checkCollisionEscortE(SimState *sim)
+{
+  // calculate corner coordinates
+  int escortTopRightX = sim->escortE.x;
+  int escortTopRightY = sim->escortE.y;
+  int escortBotLeftX = sim->escortE.x + (64-1);
+  int escortBotLeftY = sim->escortE.y + (64-1);
+
+  int shellTopRightX = sim->shellB.x;
+  int shellTopRightY = sim->shellB.y;
+  int shellBotLeftX = sim->shellB.x + (64-1);
+  int shellBotLeftY = sim->shellB.y + (64-1);
+
+  // check for collision
+  if ((shellTopRightX <= escortBotLeftX) &&
+      (shellBotLeftX >= escortTopRightX) &&
+      (shellTopRightY <= escortBotLeftY) &&
+      (shellBotLeftY >= escortTopRightY))
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
+float getRange (float v)
+{
+  const float angle = PI / 4;
+  return (pow(v, 2) * sin(2 * angle)) / G;
+}
+/*
+float getTimeToTarget (float y, float vy)
+{
+  return 2 * vy / G;
+}
+*/
+double distance (float x1, float y1, float x2, float y2)
+{
+  double dx = x2 - x1;
+  dx = fabs(dx);
+  double dy = y2 - y1;
+  dy = fabs(dy);
+  return sqrt(pow(dx, 2) + pow(dy, 2));
+}
+
+void fireBattleShell (SDL_Renderer *renderer, SDL_Window *window, SimState *sim, int battleshipType)
+{
+  float battleshipX = 0;
+  float battleshipY = 0;
+  float v = 0;
+  switch(battleshipType)
+  {
+    case 1:
+      battleshipX = sim->battleU.x;
+      battleshipY = sim->battleU.y;
+      v = sim->battleU.v;
+    break;
+    case 2:
+      battleshipX = sim->battleM.x; 
+      battleshipY = sim->battleM.y;
+      v = sim->battleM.v;
+    break;
+    case 3:
+      battleshipX = sim->battleR.x;
+      battleshipY = sim->battleR.y;
+      v = sim->battleR.v;
+    break;
+    case 4:
+      battleshipX = sim->battleS.x;
+      battleshipY = sim->battleS.y;
+      v = sim->battleS.v;
+    break;
+  }
+  float vx = v * cos(180);
+  float vy = v * sin(180);
+
+  float x = battleshipX;
+  float y = battleshipY;
+  float time = 0;
+
+  while (y > 0 && distance(battleshipX, battleshipY, x, y) <= getRange(v))
+  {
+    // Update position
+    x += vx * time;
+    y += vy * time - 0.5f * G * pow(time, 2);
+
+    // check for collision
+    if (checkCollisionEscortA(sim))
+    {
+      sim->escortA.state = 0; // that means destroyed
+      break;
+    }
+    if (checkCollisionEscortB(sim))
+    {
+      sim->escortB.state = 0; // that means destroyed
+      break;
+    }
+    if (checkCollisionEscortC(sim))
+    {
+      sim->escortC.state = 0; // that means destroyed
+      break;
+    }
+    if (checkCollisionEscortD(sim))
+    {
+      sim->escortD.state = 0; // that means destroyed
+      break;
+    }
+    if (checkCollisionEscortE(sim))
+    {
+      sim->escortE.state = 0; // that means destroyed
+      break;
+    }
+
+    // draw shell
+    drawBattleShell(renderer, window, sim);
+    time += 0.1f; // Adjust time
+  }
 }
 
 int processEvents (SDL_Window* window, SimState *sim) // TODO: include structs in this to move around idk
@@ -352,8 +586,9 @@ int main (void)
   {  
     // Check for events
     done = processEvents(window, &simState);
-    doRender(renderer, &simState, 1); // the 3rd arg is the battleship type (using ints for now)
-    drawBattleShell(renderer, window, &simState);
+    int battleshipType = 1;
+    doRender(renderer, &simState, battleshipType); // the 3rd arg is the battleship type (using ints for now)
+    fireBattleShell(renderer, window, &simState, battleshipType);
   }
 
   // Free memory
