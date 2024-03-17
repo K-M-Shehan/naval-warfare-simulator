@@ -1,9 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <time.h>
 #define WINDOW_SIZE 500
+#define PI 3.14159265
+
+const float G = 9.8f; // Gravitational acceleration
 
 typedef struct
 {
@@ -17,12 +21,26 @@ typedef struct
 
 typedef struct
 {
+  int x, y;
+  float angle;
+  SDL_Texture *texB;
+} Battleship;
+
+typedef struct
+{
   /*Main Sprites*/
   // Escorts
   EscortShip escortA, escortB, escortC, escortD, escortE;   // you could also use an array to draw these
   // Battleships
-  SDL_Texture *battleship;
+  Battleship battleU, battleM, battleR, battleS;  // all of these types would use the same sprite
 } SimState;
+
+typedef struct
+{
+  int x, y;
+
+} Shell;
+
 
 void cleanup (SDL_Window* window, SDL_Renderer* renderer)
 {
@@ -34,7 +52,11 @@ void cleanup (SDL_Window* window, SDL_Renderer* renderer)
 
 void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer)
 {  
-  SDL_Surface *battleshipSurface = NULL;
+  SDL_Surface *battleUSurface = NULL;
+  SDL_Surface *battleMSurface = NULL;
+  SDL_Surface *battleRSurface = NULL;
+  SDL_Surface *battleSSurface = NULL;
+
   SDL_Surface *escortASurface = NULL;
   SDL_Surface *escortBSurface = NULL;
   SDL_Surface *escortCSurface = NULL;
@@ -43,19 +65,62 @@ void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer)
   // Load images and render textures
   
   // Load battleship image
-  battleshipSurface = IMG_Load("resources/battleship.png");
-  if (battleshipSurface == NULL)
+  battleUSurface = IMG_Load("resources/battleship.png");
+  if (battleUSurface == NULL)
   {
     printf("Cannot find battleship.png!\n\n");
     cleanup(window, renderer);
     exit(1);
   }
-  if (sim->battleship == NULL)
+  if (sim->battleU.texB == NULL)
   {
     printf("Failed to create battleship texture from surface: %s\n", SDL_GetError());
     cleanup(window, renderer);
     exit(1);
   }
+
+  battleMSurface = IMG_Load("resources/battleship.png");
+  if (battleMSurface == NULL)
+  {
+    printf("Cannot find battleship.png!\n\n");
+    cleanup(window, renderer);
+    exit(1);
+  }
+  if (sim->battleM.texB == NULL)
+  {
+    printf("Failed to create battleship texture from surface: %s\n", SDL_GetError());
+    cleanup(window, renderer);
+    exit(1);
+  }
+ 
+  battleRSurface = IMG_Load("resources/battleship.png");
+  if (battleRSurface == NULL)
+  {
+    printf("Cannot find battleship.png!\n\n");
+    cleanup(window, renderer);
+    exit(1);
+  }
+  if (sim->battleR.texB == NULL)
+  {
+    printf("Failed to create battleship texture from surface: %s\n", SDL_GetError());
+    cleanup(window, renderer);
+    exit(1);
+  }
+ 
+  battleSSurface = IMG_Load("resources/battleship.png");
+  if (battleSSurface == NULL)
+  {
+    printf("Cannot find battleship.png!\n\n");
+    cleanup(window, renderer);
+    exit(1);
+  }
+  if (sim->battleS.texB == NULL)
+  {
+    printf("Failed to create battleship texture from surface: %s\n", SDL_GetError());
+    cleanup(window, renderer);
+    exit(1);
+  }
+
 
   // Load escortships' images
   escortASurface = IMG_Load("resources/escortshipA.png");
@@ -98,8 +163,18 @@ void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer)
   }
 
   // Load surface into texture and free surface
-  sim->battleship = SDL_CreateTextureFromSurface(renderer, battleshipSurface);
-  SDL_FreeSurface(battleshipSurface);
+  sim->battleU.texB = SDL_CreateTextureFromSurface(renderer, battleUSurface);
+  SDL_FreeSurface(battleUSurface);
+
+  sim->battleM.texB = SDL_CreateTextureFromSurface(renderer, battleMSurface);
+  SDL_FreeSurface(battleMSurface);
+
+  sim->battleR.texB = SDL_CreateTextureFromSurface(renderer, battleRSurface);
+  SDL_FreeSurface(battleRSurface);
+
+  sim->battleS.texB = SDL_CreateTextureFromSurface(renderer, battleSSurface);
+  SDL_FreeSurface(battleSSurface);
+
 
   // init escorts
   sim->escortA.texE = SDL_CreateTextureFromSurface(renderer, escortASurface);
@@ -116,6 +191,20 @@ void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer)
   
   sim->escortE.texE = SDL_CreateTextureFromSurface(renderer, escortESurface);
   SDL_FreeSurface(escortESurface);
+
+  // x and y positions of battleships
+  sim->battleU.x = 50;
+  sim->battleU.y = WINDOW_SIZE - 100;
+
+  sim->battleM.x = 50;
+  sim->battleM.y = WINDOW_SIZE - 100;
+
+  sim->battleR.x = 50;
+  sim->battleR.y = WINDOW_SIZE - 100;
+
+  sim->battleS.x = 50;
+  sim->battleS.y = WINDOW_SIZE - 100;
+
 
   // x and y positions of escorts
   sim->escortA.x = rand() % (WINDOW_SIZE - 64);
@@ -152,7 +241,7 @@ int processEvents (SDL_Window* window, SimState *sim) // TODO: include structs i
   return done;
 }
 
-void doRender (SDL_Renderer* renderer, SimState* sim) // TODO:  include struct here as well to render the struct, when initializing rect in this use the positions of the struct to do it ma man
+void doRender (SDL_Renderer* renderer, SimState* sim, int battleshipType) // TODO:  include struct here as well to render the struct, when initializing rect in this use the positions of the struct to do it ma man
 {
   // set drawing color to blue
   SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
@@ -160,9 +249,27 @@ void doRender (SDL_Renderer* renderer, SimState* sim) // TODO:  include struct h
   // clear the screen to blue
   SDL_RenderClear(renderer);
 
-  // draw the battleship
-  SDL_Rect battleshipRect = { 50, WINDOW_SIZE - 100, 64, 64 };
-  SDL_RenderCopy(renderer, sim->battleship, NULL, &battleshipRect);
+  switch(battleshipType) // TODO: gotta change this int to mouse click or something
+  {
+    // draw battleships
+    case 1:
+      SDL_Rect battleURect = { sim->battleU.x, sim->battleU.y, 64, 64 };
+      SDL_RenderCopy(renderer, sim->battleU.texB, NULL, &battleURect);
+    break;
+    case 2:
+      SDL_Rect battleMRect = { sim->battleM.x, sim->battleM.y, 64, 64 };
+      SDL_RenderCopy(renderer, sim->battleM.texB, NULL, &battleMRect);
+    break;
+    case 3:
+      SDL_Rect battleRRect = { sim->battleR.x, sim->battleR.y, 64, 64 };
+      SDL_RenderCopy(renderer, sim->battleR.texB, NULL, &battleRRect);
+    break;
+    case 4:
+      SDL_Rect battleSRect = { sim->battleS.x, sim->battleS.y, 64, 64 };
+      SDL_RenderCopy(renderer, sim->battleS.texB, NULL, &battleSRect);
+    break;
+  }
+
 
   // draw escorts
   SDL_Rect escortARect = {sim->escortA.x, sim->escortA.y, 64, 64}; 
@@ -216,11 +323,21 @@ int main (void)
   {  
     // Check for events
     done = processEvents(window, &simState);
-    doRender(renderer, &simState);
+    doRender(renderer, &simState, 1); // the 3rd arg is the battleship type (using ints for now)
   }
 
   // Free memory
-  SDL_DestroyTexture(simState.battleship);
+  SDL_DestroyTexture(simState.battleU.texB);
+  SDL_DestroyTexture(simState.battleM.texB);
+  SDL_DestroyTexture(simState.battleR.texB);
+  SDL_DestroyTexture(simState.battleS.texB);
+
+  SDL_DestroyTexture(simState.escortA.texE);
+  SDL_DestroyTexture(simState.escortB.texE);
+  SDL_DestroyTexture(simState.escortC.texE);
+  SDL_DestroyTexture(simState.escortD.texE);
+  SDL_DestroyTexture(simState.escortE.texE);
+
   cleanup(window, renderer);
   return 0;
 }
