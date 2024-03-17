@@ -5,7 +5,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <time.h>
-#define WINDOW_SIZE 500
+#define WINDOW_SIZE 300
 #define PI 3.14159265
 
 const float G = 9.8f; // Gravitational acceleration
@@ -397,17 +397,19 @@ float getRange (float v)
   const float angle = PI / 4;
   return (pow(v, 2) * sin(2 * angle)) / G;
 }
-/*
+
 float getTimeToTarget (float y, float vy)
 {
   return 2 * vy / G;
 }
-*/
-double distance (float x1, float y1, float x2, float y2)
+
+double distance (float Otarget_x, float Otarget_y, float x, float y) // original target
 {
-  double dx = x2 - x1;
+  int target_x = Otarget_x - 32;
+  int target_y = Otarget_y -32;
+  double dx = target_x - x;
   dx = fabs(dx);
-  double dy = y2 - y1;
+  double dy = target_y - y;
   dy = fabs(dy);
   return sqrt(pow(dx, 2) + pow(dy, 2));
 }
@@ -440,14 +442,23 @@ void fireBattleShell (SDL_Renderer *renderer, SDL_Window *window, SimState *sim,
       v = sim->battleS.v;
     break;
   }
-  float vx = v * cos(180);
-  float vy = v * sin(180);
+  
+  int target_x = sim->escortA.x - 32;
+  int target_y = sim->escortA.y - 32;
+  
+  double dx = target_x - battleshipX;
+  double dy = target_y - battleshipY;
+  double dist = sqrt(pow(dx, 2) + pow(dy, 2));
+
+
+  float vx = v / dist;
+  float vy = v / dist;
 
   float x = battleshipX;
   float y = battleshipY;
   float time = 0;
 
-  while (y > 0 && distance(battleshipX, battleshipY, x, y) <= getRange(v))
+  while (y > 0 && distance(sim->escortA.x, sim->escortA.y, x, y) <= getRange(v))
   {
     // Update position
     x += vx * time;
@@ -457,32 +468,45 @@ void fireBattleShell (SDL_Renderer *renderer, SDL_Window *window, SimState *sim,
     if (checkCollisionEscortA(sim))
     {
       sim->escortA.state = 0; // that means destroyed
+      SDL_DestroyTexture(sim->escortA.texE);
       break;
     }
     if (checkCollisionEscortB(sim))
     {
       sim->escortB.state = 0; // that means destroyed
+      SDL_DestroyTexture(sim->escortB.texE);
       break;
     }
     if (checkCollisionEscortC(sim))
     {
       sim->escortC.state = 0; // that means destroyed
+      SDL_DestroyTexture(sim->escortC.texE);
       break;
     }
     if (checkCollisionEscortD(sim))
     {
-      sim->escortD.state = 0; // that means destroyed
+      sim->escortD.state = 0; // that means destroyed 
+      SDL_DestroyTexture(sim->escortD.texE);
       break;
     }
     if (checkCollisionEscortE(sim))
     {
       sim->escortE.state = 0; // that means destroyed
+      SDL_DestroyTexture(sim->escortE.texE);
       break;
     }
-
+    
+    sim->shellB.x = (int) x;
+    sim->shellB.y = (int) y;
+    
     // draw shell
     drawBattleShell(renderer, window, sim);
-    time += 0.1f; // Adjust time
+    if (time > getTimeToTarget(y, vy))
+      break;
+    else
+    {
+      time += 0.1f; // Adjust time
+    }
   }
 }
 
