@@ -5,7 +5,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <time.h>
-#define WINDOW_SIZE 300
+#define WINDOW_SIZE 500
 #define PI 3.14159265
 
 const float G = 9.8f; // Gravitational acceleration
@@ -75,9 +75,14 @@ void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer)
     cleanup(window, renderer);
     exit(1);
   }
+
+  // Load surface into texture and free surface
+  sim->battleU.texB = SDL_CreateTextureFromSurface(renderer, battleUSurface);
+  SDL_FreeSurface(battleUSurface);
+  
   if (sim->battleU.texB == NULL)
   {
-    printf("Failed to create battleship texture from surface: %s\n", SDL_GetError());
+    printf("Failed to create battleshipU texture from surface: %s\n", SDL_GetError());
     cleanup(window, renderer);
     exit(1);
   }
@@ -89,9 +94,14 @@ void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer)
     cleanup(window, renderer);
     exit(1);
   }
+
+  // Load surface into texture and free surface
+  sim->battleM.texB = SDL_CreateTextureFromSurface(renderer, battleMSurface);
+  SDL_FreeSurface(battleMSurface);
+
   if (sim->battleM.texB == NULL)
   {
-    printf("Failed to create battleship texture from surface: %s\n", SDL_GetError());
+    printf("Failed to create battleshipM texture from surface: %s\n", SDL_GetError());
     cleanup(window, renderer);
     exit(1);
   }
@@ -103,9 +113,14 @@ void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer)
     cleanup(window, renderer);
     exit(1);
   }
+
+  // Load surface into texture and free surface
+  sim->battleR.texB = SDL_CreateTextureFromSurface(renderer, battleRSurface);
+  SDL_FreeSurface(battleRSurface);
+
   if (sim->battleR.texB == NULL)
   {
-    printf("Failed to create battleship texture from surface: %s\n", SDL_GetError());
+    printf("Failed to create battleshipR texture from surface: %s\n", SDL_GetError());
     cleanup(window, renderer);
     exit(1);
   }
@@ -117,9 +132,14 @@ void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer)
     cleanup(window, renderer);
     exit(1);
   }
+
+  // Load surface into texture and free surface
+  sim->battleS.texB = SDL_CreateTextureFromSurface(renderer, battleSSurface);
+  SDL_FreeSurface(battleSSurface);
+
   if (sim->battleS.texB == NULL)
   {
-    printf("Failed to create battleship texture from surface: %s\n", SDL_GetError());
+    printf("Failed to create battleshipS texture from surface: %s\n", SDL_GetError());
     cleanup(window, renderer);
     exit(1);
   }
@@ -165,20 +185,6 @@ void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer)
     exit(1);
   }
 
-  // Load surface into texture and free surface
-  sim->battleU.texB = SDL_CreateTextureFromSurface(renderer, battleUSurface);
-  SDL_FreeSurface(battleUSurface);
-
-  sim->battleM.texB = SDL_CreateTextureFromSurface(renderer, battleMSurface);
-  SDL_FreeSurface(battleMSurface);
-
-  sim->battleR.texB = SDL_CreateTextureFromSurface(renderer, battleRSurface);
-  SDL_FreeSurface(battleRSurface);
-
-  sim->battleS.texB = SDL_CreateTextureFromSurface(renderer, battleSSurface);
-  SDL_FreeSurface(battleSSurface);
-
-
   // init escorts
   sim->escortA.texE = SDL_CreateTextureFromSurface(renderer, escortASurface);
   SDL_FreeSurface(escortASurface);
@@ -197,16 +203,16 @@ void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer)
 
   // x and y positions of battleships
   sim->battleU.x = 50;
-  sim->battleU.y = WINDOW_SIZE - 100;
+  sim->battleU.y = WINDOW_SIZE - (64+50);
 
   sim->battleM.x = 50;
-  sim->battleM.y = WINDOW_SIZE - 100;
+  sim->battleM.y = WINDOW_SIZE - (64+50);
 
   sim->battleR.x = 50;
-  sim->battleR.y = WINDOW_SIZE - 100;
+  sim->battleR.y = WINDOW_SIZE - (64+50);
 
   sim->battleS.x = 50;
-  sim->battleS.y = WINDOW_SIZE - 100;
+  sim->battleS.y = WINDOW_SIZE - (64+50);
 
 
   // x and y positions of escorts
@@ -249,8 +255,8 @@ void drawBattleShell (SDL_Renderer *renderer, SDL_Window *window, SimState *sim)
   SDL_FreeSurface(shellSurface);
 
   // x and y positions of the shell at initial point
-  sim->shellB.x = 65;
-  sim->shellB.y = WINDOW_SIZE - 70;
+  sim->shellB.x = 50;
+  sim->shellB.y = WINDOW_SIZE - (64+50);
 
   SDL_Rect shellBRect = { sim->shellB.x, sim->shellB.y, 10, 10};
   SDL_RenderCopy(renderer, sim->shellB.texS, NULL, &shellBRect);
@@ -267,8 +273,8 @@ bool checkCollisionEscortA(SimState *sim)
 
   int shellTopRightX = sim->shellB.x;
   int shellTopRightY = sim->shellB.y;
-  int shellBotLeftX = sim->shellB.x + (64-1);
-  int shellBotLeftY = sim->shellB.y + (64-1);
+  int shellBotLeftX = sim->shellB.x + (10-1);
+  int shellBotLeftY = sim->shellB.y + (10-1);
 
   // check for collision
   if ((shellTopRightX <= escortBotLeftX) &&
@@ -294,8 +300,8 @@ bool checkCollisionEscortB(SimState *sim)
 
   int shellTopRightX = sim->shellB.x;
   int shellTopRightY = sim->shellB.y;
-  int shellBotLeftX = sim->shellB.x + (64-1);
-  int shellBotLeftY = sim->shellB.y + (64-1);
+  int shellBotLeftX = sim->shellB.x + (10-1);
+  int shellBotLeftY = sim->shellB.y + (10-1);
 
   // check for collision
   if ((shellTopRightX <= escortBotLeftX) &&
@@ -321,8 +327,8 @@ bool checkCollisionEscortC(SimState *sim)
 
   int shellTopRightX = sim->shellB.x;
   int shellTopRightY = sim->shellB.y;
-  int shellBotLeftX = sim->shellB.x + (64-1);
-  int shellBotLeftY = sim->shellB.y + (64-1);
+  int shellBotLeftX = sim->shellB.x + (10-1);
+  int shellBotLeftY = sim->shellB.y + (10-1);
 
   // check for collision
   if ((shellTopRightX <= escortBotLeftX) &&
@@ -348,8 +354,8 @@ bool checkCollisionEscortD(SimState *sim)
 
   int shellTopRightX = sim->shellB.x;
   int shellTopRightY = sim->shellB.y;
-  int shellBotLeftX = sim->shellB.x + (64-1);
-  int shellBotLeftY = sim->shellB.y + (64-1);
+  int shellBotLeftX = sim->shellB.x + (10-1);
+  int shellBotLeftY = sim->shellB.y + (10-1);
 
   // check for collision
   if ((shellTopRightX <= escortBotLeftX) &&
@@ -375,8 +381,8 @@ bool checkCollisionEscortE(SimState *sim)
 
   int shellTopRightX = sim->shellB.x;
   int shellTopRightY = sim->shellB.y;
-  int shellBotLeftX = sim->shellB.x + (64-1);
-  int shellBotLeftY = sim->shellB.y + (64-1);
+  int shellBotLeftX = sim->shellB.x + (10-1);
+  int shellBotLeftY = sim->shellB.y + (10-1);
 
   // check for collision
   if ((shellTopRightX <= escortBotLeftX) &&
@@ -468,6 +474,7 @@ void fireBattleShell (SDL_Renderer *renderer, SDL_Window *window, SimState *sim,
     if (checkCollisionEscortA(sim))
     {
       sim->escortA.state = 0; // that means destroyed
+      printf("escortA destroyed!\n");
       SDL_DestroyTexture(sim->escortA.texE);
       break;
     }
