@@ -421,7 +421,7 @@ float getTimeToTarget (float y, float vy) // this isn't executed at all !
   return 2 * vy / G;
 }
 
-void fireBattleShell (SDL_Renderer *renderer, SDL_Window *window, SimState *sim, int battleshipType, int xPos, int yPos)
+void fireShellToEscortA (SDL_Renderer *renderer, SDL_Window *window, SimState *sim, int battleshipType)
 {
   float battleshipX = 0;
   float battleshipY = 0;
@@ -451,8 +451,8 @@ void fireBattleShell (SDL_Renderer *renderer, SDL_Window *window, SimState *sim,
     break;
   }
   
-  float target_x = xPos - 32;
-  float target_y = yPos - 32;
+  float target_x = sim->escortA.x - 32;
+  float target_y = sim->escortA.y - 32;
   
   double dx = target_x - battleshipX;
   double dy = target_y - battleshipY;
@@ -461,21 +461,22 @@ void fireBattleShell (SDL_Renderer *renderer, SDL_Window *window, SimState *sim,
   
   double vx = v * dx / dist;
   double vy = v * dy / dist;
-  vx = fabs(vy);
+  vx = fabs(vx);
   vy = fabs(vy);
+  //printf("vx: %lf\n", vx);
+  //printf("vy: %lf\n", vy);
 
   float x = battleshipX;
   float y = battleshipY;
   // printf("x: %f\n", x);
   // printf("y: %f\n", y);
   float time = 0;
-
-  while (y > 0 && dist <= getRange(v))
+  
+  while (y > 0 && dist <= getRange(v) && time < 5)
   {
     // Update position
     x += vx * time;
     y += vy * time - 0.5f * G * pow(time, 2);
-
     // check for collision
     if (checkCollisionEscortA(sim))
     {
@@ -484,6 +485,79 @@ void fireBattleShell (SDL_Renderer *renderer, SDL_Window *window, SimState *sim,
       SDL_DestroyTexture(sim->escortA.texE);
       break;
     }
+      sim->shellB.x = (int) x;
+      sim->shellB.y = (int) y;
+      
+      // draw shell
+      drawBattleShell(renderer, window, sim);
+      if (time > getTimeToTarget(battleshipY, vy))
+      {
+        break;
+      }
+      else
+      {
+        time += 0.1f; // Adjust time
+      }
+  }
+}
+
+void fireShellToEscortB (SDL_Renderer *renderer, SDL_Window *window, SimState *sim, int battleshipType)
+{
+  float battleshipX = 0;
+  float battleshipY = 0;
+  float v = 0;
+
+  switch(battleshipType)
+  {
+    case 1:
+      battleshipX = sim->battleU.x;
+      battleshipY = sim->battleU.y;
+      v = sim->battleU.v;
+    break;
+    case 2:
+      battleshipX = sim->battleM.x; 
+      battleshipY = sim->battleM.y;
+      v = sim->battleM.v;
+    break;
+    case 3:
+      battleshipX = sim->battleR.x;
+      battleshipY = sim->battleR.y;
+      v = sim->battleR.v;
+    break;
+    case 4:
+      battleshipX = sim->battleS.x;
+      battleshipY = sim->battleS.y;
+      v = sim->battleS.v;
+    break;
+  }
+  
+  float target_x = sim->escortB.x - 32;
+  float target_y = sim->escortB.y - 32;
+  
+  double dx = target_x - battleshipX;
+  double dy = target_y - battleshipY;
+  double dist = sqrt(pow(dx, 2) + pow(dy, 2));
+  // printf("distance: %lf\n", dist); // remove this after
+  
+  double vx = v * dx / dist;
+  double vy = v * dy / dist;
+  vx = fabs(vx);
+  vy = fabs(vy);
+  //printf("vx: %lf\n", vx);
+  //printf("vy: %lf\n", vy);
+
+  float x = battleshipX;
+  float y = battleshipY;
+  // printf("x: %f\n", x);
+  // printf("y: %f\n", y);
+  float time = 0;
+  
+  while (y > 0 && dist <= getRange(v) && time < 5)
+  {
+    // Update position
+    x += vx * time;
+    y += vy * time - 0.5f * G * pow(time, 2);
+    // check for collision
     if (checkCollisionEscortB(sim))
     {
       sim->escortB.state = 0; // that means destroyed
@@ -492,6 +566,79 @@ void fireBattleShell (SDL_Renderer *renderer, SDL_Window *window, SimState *sim,
       SDL_DestroyTexture(sim->escortB.texE);
       break;
     }
+      sim->shellB.x = (int) x;
+      sim->shellB.y = (int) y;
+      
+      // draw shell
+      drawBattleShell(renderer, window, sim);
+      if (time > getTimeToTarget(battleshipY, vy))
+      {
+        break;
+      }
+      else
+      {
+        time += 0.1f; // Adjust time
+      }
+  }
+} 
+
+void fireShellToEscortC (SDL_Renderer *renderer, SDL_Window *window, SimState *sim, int battleshipType)
+{
+  float battleshipX = 0;
+  float battleshipY = 0;
+  float v = 0;
+
+  switch(battleshipType)
+  {
+    case 1:
+      battleshipX = sim->battleU.x;
+      battleshipY = sim->battleU.y;
+      v = sim->battleU.v;
+    break;
+    case 2:
+      battleshipX = sim->battleM.x; 
+      battleshipY = sim->battleM.y;
+      v = sim->battleM.v;
+    break;
+    case 3:
+      battleshipX = sim->battleR.x;
+      battleshipY = sim->battleR.y;
+      v = sim->battleR.v;
+    break;
+    case 4:
+      battleshipX = sim->battleS.x;
+      battleshipY = sim->battleS.y;
+      v = sim->battleS.v;
+    break;
+  }
+  
+  float target_x = sim->escortC.x - 32;
+  float target_y = sim->escortC.y - 32;
+  
+  double dx = target_x - battleshipX;
+  double dy = target_y - battleshipY;
+  double dist = sqrt(pow(dx, 2) + pow(dy, 2));
+  // printf("distance: %lf\n", dist); // remove this after
+  
+  double vx = v * dx / dist;
+  double vy = v * dy / dist;
+  vx = fabs(vx);
+  vy = fabs(vy);
+  //printf("vx: %lf\n", vx);
+  //printf("vy: %lf\n", vy);
+
+  float x = battleshipX;
+  float y = battleshipY;
+  // printf("x: %f\n", x);
+  // printf("y: %f\n", y);
+  float time = 0;
+  
+  while (y > 0 && dist <= getRange(v) && time < 5)
+  {
+    // Update position
+    x += vx * time;
+    y += vy * time - 0.5f * G * pow(time, 2);
+    // check for collision
     if (checkCollisionEscortC(sim))
     {
       sim->escortC.state = 0; // that means destroyed
@@ -500,6 +647,79 @@ void fireBattleShell (SDL_Renderer *renderer, SDL_Window *window, SimState *sim,
       SDL_DestroyTexture(sim->escortC.texE);
       break;
     }
+      sim->shellB.x = (int) x;
+      sim->shellB.y = (int) y;
+      
+      // draw shell
+      drawBattleShell(renderer, window, sim);
+      if (time > getTimeToTarget(battleshipY, vy))
+      {
+        break;
+      }
+      else
+      {
+        time += 0.1f; // Adjust time
+      }
+  }
+} 
+
+void fireShellToEscortD (SDL_Renderer *renderer, SDL_Window *window, SimState *sim, int battleshipType)
+{
+  float battleshipX = 0;
+  float battleshipY = 0;
+  float v = 0;
+
+  switch(battleshipType)
+  {
+    case 1:
+      battleshipX = sim->battleU.x;
+      battleshipY = sim->battleU.y;
+      v = sim->battleU.v;
+    break;
+    case 2:
+      battleshipX = sim->battleM.x; 
+      battleshipY = sim->battleM.y;
+      v = sim->battleM.v;
+    break;
+    case 3:
+      battleshipX = sim->battleR.x;
+      battleshipY = sim->battleR.y;
+      v = sim->battleR.v;
+    break;
+    case 4:
+      battleshipX = sim->battleS.x;
+      battleshipY = sim->battleS.y;
+      v = sim->battleS.v;
+    break;
+  }
+  
+  float target_x = sim->escortD.x - 32;
+  float target_y = sim->escortD.y - 32;
+  
+  double dx = target_x - battleshipX;
+  double dy = target_y - battleshipY;
+  double dist = sqrt(pow(dx, 2) + pow(dy, 2));
+  // printf("distance: %lf\n", dist); // remove this after
+  
+  double vx = v * dx / dist;
+  double vy = v * dy / dist;
+  vx = fabs(vx);
+  vy = fabs(vy);
+  //printf("vx: %lf\n", vx);
+  //printf("vy: %lf\n", vy);
+
+  float x = battleshipX;
+  float y = battleshipY;
+  // printf("x: %f\n", x);
+  // printf("y: %f\n", y);
+  float time = 0;
+  
+  while (y > 0 && dist <= getRange(v) && time < 5)
+  {
+    // Update position
+    x += vx * time;
+    y += vy * time - 0.5f * G * pow(time, 2);
+    // check for collision
     if (checkCollisionEscortD(sim))
     {
       sim->escortD.state = 0; // that means destroyed 
@@ -508,6 +728,79 @@ void fireBattleShell (SDL_Renderer *renderer, SDL_Window *window, SimState *sim,
       SDL_DestroyTexture(sim->escortD.texE);
       break;
     }
+      sim->shellB.x = (int) x;
+      sim->shellB.y = (int) y;
+      
+      // draw shell
+      drawBattleShell(renderer, window, sim);
+      if (time > getTimeToTarget(battleshipY, vy))
+      {
+        break;
+      }
+      else
+      {
+        time += 0.1f; // Adjust time
+      }
+  }
+} 
+
+void fireShellToEscortE (SDL_Renderer *renderer, SDL_Window *window, SimState *sim, int battleshipType)
+{
+  float battleshipX = 0;
+  float battleshipY = 0;
+  float v = 0;
+
+  switch(battleshipType)
+  {
+    case 1:
+      battleshipX = sim->battleU.x;
+      battleshipY = sim->battleU.y;
+      v = sim->battleU.v;
+    break;
+    case 2:
+      battleshipX = sim->battleM.x; 
+      battleshipY = sim->battleM.y;
+      v = sim->battleM.v;
+    break;
+    case 3:
+      battleshipX = sim->battleR.x;
+      battleshipY = sim->battleR.y;
+      v = sim->battleR.v;
+    break;
+    case 4:
+      battleshipX = sim->battleS.x;
+      battleshipY = sim->battleS.y;
+      v = sim->battleS.v;
+    break;
+  }
+  
+  float target_x = sim->escortE.x - 32;
+  float target_y = sim->escortE.y - 32;
+  
+  double dx = target_x - battleshipX;
+  double dy = target_y - battleshipY;
+  double dist = sqrt(pow(dx, 2) + pow(dy, 2));
+  // printf("distance: %lf\n", dist); // remove this after
+  
+  double vx = v * dx / dist;
+  double vy = v * dy / dist;
+  vx = fabs(vx);
+  vy = fabs(vy);
+  //printf("vx: %lf\n", vx);
+  //printf("vy: %lf\n", vy);
+
+  float x = battleshipX;
+  float y = battleshipY;
+  // printf("x: %f\n", x);
+  // printf("y: %f\n", y);
+  float time = 0;
+  
+  while (y > 0 && dist <= getRange(v) && time < 5)
+  {
+    // Update position
+    x += vx * time;
+    y += vy * time - 0.5f * G * pow(time, 2);
+    // check for collision
     if (checkCollisionEscortE(sim))
     {
       sim->escortE.state = 0; // that means destroyed 
@@ -515,20 +808,25 @@ void fireBattleShell (SDL_Renderer *renderer, SDL_Window *window, SimState *sim,
       SDL_DestroyTexture(sim->escortE.texE);
       break;
     }
+      sim->shellB.x = (int) x;
+      sim->shellB.y = (int) y;
+      
+      // draw shell
+      drawBattleShell(renderer, window, sim);
+      if (time > getTimeToTarget(battleshipY, vy))
+      {
+        break;
+      }
+      else
+      {
+        time += 0.1f; // Adjust time
+      }
     
-    sim->shellB.x = (int) x;
-    sim->shellB.y = (int) y;
-    
-    // draw shell
-    drawBattleShell(renderer, window, sim);
-    if (time > getTimeToTarget(y, vy))
-      break;
-    else
-    {
-      time += 0.1f; // Adjust time
-    }
   }
-}
+} 
+
+
+
 
 int processEvents (SDL_Window* window, SimState *sim) // TODO: include structs in this to move around idk
 {
@@ -632,14 +930,12 @@ int main (void)
     done = processEvents(window, &simState);
     int battleshipType = 1;
     doRender(renderer, &simState, battleshipType); // the 3rd arg is the battleship type (using ints for now)
-    while (simState.escortA.state == 1 && simState.escortB.state == 1 && simState.escortC.state == 1 && simState.escortD.state == 1 && simState.escortE.state == 1)
-    {
-      fireBattleShell(renderer, window, &simState, battleshipType, simState.escortA.x, simState.escortA.y);
-      fireBattleShell(renderer, window, &simState, battleshipType, simState.escortB.x, simState.escortB.y);
-      fireBattleShell(renderer, window, &simState, battleshipType, simState.escortC.x, simState.escortC.y);
-      fireBattleShell(renderer, window, &simState, battleshipType, simState.escortD.x, simState.escortD.y);
-      fireBattleShell(renderer, window, &simState, battleshipType, simState.escortE.x, simState.escortE.y);
-    }
+
+    fireShellToEscortA(renderer, window, &simState, battleshipType);
+    fireShellToEscortB(renderer, window, &simState, battleshipType);
+    fireShellToEscortC(renderer, window, &simState, battleshipType);
+    fireShellToEscortD(renderer, window, &simState, battleshipType);
+    fireShellToEscortE(renderer, window, &simState, battleshipType);
   }
 
   // Free memory
