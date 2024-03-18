@@ -5,10 +5,12 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <time.h>
-#define WINDOW_SIZE 500
+#define WINDOW_SIZE 300
 #define PI 3.14159265
 
 const float G = 9.8f; // Gravitational acceleration
+
+
 
 typedef struct
 {
@@ -232,10 +234,17 @@ void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer)
   sim->escortE.y = rand() % (WINDOW_SIZE - 64);
 
   // v of battleships
-  sim->battleU.v = 10;
-  sim->battleM.v = 10;
-  sim->battleR.v = 10;
-  sim->battleS.v = 10;
+  sim->battleU.v = 35;
+  sim->battleM.v = 35;
+  sim->battleR.v = 35;
+  sim->battleS.v = 35;
+
+  // state of escorts
+  sim->escortA.state = 1;
+  sim->escortB.state = 1;
+  sim->escortC.state = 1;
+  sim->escortD.state = 1;
+  sim->escortE.state = 1;
 }
 
 void drawBattleShell (SDL_Renderer *renderer, SDL_Window *window, SimState *sim)
@@ -283,6 +292,7 @@ bool checkCollisionEscortA(SimState *sim)
       (shellBotLeftY >= escortTopRightY))
   {
     return true;
+    printf("collision is true\n");
   }
   else
   {
@@ -401,30 +411,22 @@ bool checkCollisionEscortE(SimState *sim)
 float getRange (float v)
 {
   const float angle = PI / 4;
+  // printf("return value of range: %f\n", (pow(v, 2) * sin(2 * angle)) / G);
   return (pow(v, 2) * sin(2 * angle)) / G;
 }
 
-float getTimeToTarget (float y, float vy)
+float getTimeToTarget (float y, float vy) // this isn't executed at all !
 {
+  // printf("return value of time to tar: %f\n", 2 * vy / G);
   return 2 * vy / G;
 }
 
-double distance (float Otarget_x, float Otarget_y, float x, float y) // original target
-{
-  int target_x = Otarget_x - 32;
-  int target_y = Otarget_y -32;
-  double dx = target_x - x;
-  dx = fabs(dx);
-  double dy = target_y - y;
-  dy = fabs(dy);
-  return sqrt(pow(dx, 2) + pow(dy, 2));
-}
-
-void fireBattleShell (SDL_Renderer *renderer, SDL_Window *window, SimState *sim, int battleshipType)
+void fireBattleShell (SDL_Renderer *renderer, SDL_Window *window, SimState *sim, int battleshipType, int xPos, int yPos)
 {
   float battleshipX = 0;
   float battleshipY = 0;
   float v = 0;
+
   switch(battleshipType)
   {
     case 1:
@@ -449,22 +451,26 @@ void fireBattleShell (SDL_Renderer *renderer, SDL_Window *window, SimState *sim,
     break;
   }
   
-  int target_x = sim->escortA.x - 32;
-  int target_y = sim->escortA.y - 32;
+  float target_x = xPos - 32;
+  float target_y = yPos - 32;
   
   double dx = target_x - battleshipX;
   double dy = target_y - battleshipY;
   double dist = sqrt(pow(dx, 2) + pow(dy, 2));
-
-
-  float vx = v / dist;
-  float vy = v / dist;
+  // printf("distance: %lf\n", dist); // remove this after
+  
+  double vx = v * dx / dist;
+  double vy = v * dy / dist;
+  vx = fabs(vy);
+  vy = fabs(vy);
 
   float x = battleshipX;
   float y = battleshipY;
+  // printf("x: %f\n", x);
+  // printf("y: %f\n", y);
   float time = 0;
 
-  while (y > 0 && distance(sim->escortA.x, sim->escortA.y, x, y) <= getRange(v))
+  while (y > 0 && dist <= getRange(v))
   {
     // Update position
     x += vx * time;
@@ -481,24 +487,31 @@ void fireBattleShell (SDL_Renderer *renderer, SDL_Window *window, SimState *sim,
     if (checkCollisionEscortB(sim))
     {
       sim->escortB.state = 0; // that means destroyed
+
+      printf("escortB destroyed!\n");
       SDL_DestroyTexture(sim->escortB.texE);
       break;
     }
     if (checkCollisionEscortC(sim))
     {
       sim->escortC.state = 0; // that means destroyed
+      
+      printf("escortC destroyed!\n");
       SDL_DestroyTexture(sim->escortC.texE);
       break;
     }
     if (checkCollisionEscortD(sim))
     {
       sim->escortD.state = 0; // that means destroyed 
+      
+      printf("escortD destroyed!\n");
       SDL_DestroyTexture(sim->escortD.texE);
       break;
     }
     if (checkCollisionEscortE(sim))
     {
-      sim->escortE.state = 0; // that means destroyed
+      sim->escortE.state = 0; // that means destroyed 
+      printf("escortE destroyed!\n");
       SDL_DestroyTexture(sim->escortE.texE);
       break;
     }
@@ -619,7 +632,14 @@ int main (void)
     done = processEvents(window, &simState);
     int battleshipType = 1;
     doRender(renderer, &simState, battleshipType); // the 3rd arg is the battleship type (using ints for now)
-    fireBattleShell(renderer, window, &simState, battleshipType);
+    while (simState.escortA.state == 1 && simState.escortB.state == 1 && simState.escortC.state == 1 && simState.escortD.state == 1 && simState.escortE.state == 1)
+    {
+      fireBattleShell(renderer, window, &simState, battleshipType, simState.escortA.x, simState.escortA.y);
+      fireBattleShell(renderer, window, &simState, battleshipType, simState.escortB.x, simState.escortB.y);
+      fireBattleShell(renderer, window, &simState, battleshipType, simState.escortC.x, simState.escortC.y);
+      fireBattleShell(renderer, window, &simState, battleshipType, simState.escortD.x, simState.escortD.y);
+      fireBattleShell(renderer, window, &simState, battleshipType, simState.escortE.x, simState.escortE.y);
+    }
   }
 
   // Free memory
