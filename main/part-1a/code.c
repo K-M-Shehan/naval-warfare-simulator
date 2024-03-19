@@ -21,8 +21,11 @@ typedef struct
   char* name;       // name of escort ship       
   int id;           // unique id
   SDL_Texture *texE;// texture of escort ship
-  int angle;
+  float maxAngle;
+  float minAngle;
+  float angleR;
   float v;
+  int type;       // type of escort A,B,C,D,E (denoted with numbers 1-5)
 } EscortShip;
 
 typedef struct
@@ -277,18 +280,40 @@ void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer) // load
   sim->battleR.state = 1;    // R
   sim->battleS.state = 1;    // S
 
-  // angles of battleships
+  // angle of battleships
   sim->battleU.angle = PI / 4;    // U
   sim->battleM.angle = PI / 4;    // M
   sim->battleR.angle = PI / 4;    // R
   sim->battleS.angle = PI / 4;    // S
 
+  // Max angle of escorts (90deg)
+  sim->escortA.maxAngle = PI / 2; // A 
+  sim->escortB.maxAngle = PI / 2; // B 
+  sim->escortC.maxAngle = PI / 2; // C 
+  sim->escortD.maxAngle = PI / 2; // D 
+  sim->escortE.maxAngle = PI / 2; // E
+  
+  // Min angle of escorts
+  sim->escortA.minAngle = PI / (18/7.0); // A - 20deg -> 90 - 20 = 70 
+  sim->escortB.minAngle = PI / 3; // B - 30deg
+  sim->escortC.minAngle = PI / (36/13.0); // C - 25deg
+  sim->escortD.minAngle = PI / (9/2.0); // D - 50deg
+  sim->escortE.minAngle = PI / 9; // E - 70deg
+  
+  // Angle range of escorts
+  sim->escortA.angleR = sim->escortA.maxAngle - sim->escortA.minAngle; // A
+  sim->escortB.angleR = sim->escortB.maxAngle - sim->escortB.minAngle; // B
+  sim->escortC.angleR = sim->escortC.maxAngle - sim->escortC.minAngle; // C
+  sim->escortD.angleR = sim->escortD.maxAngle - sim->escortD.minAngle; // D
+  sim->escortE.angleR = sim->escortE.maxAngle - sim->escortE.minAngle; // E
+
+  // Type of escorts
+  sim->escortA.type = 1; // A
+  sim->escortB.type = 2; // B
+  sim->escortC.type = 3; // C
+  sim->escortD.type = 4; // D
+  sim->escortE.type = 5; // E
 }
-
-
-
-
-
 
 float getRange (float v, float angle)
 {
@@ -300,6 +325,98 @@ float getTimeToTarget (float y, float vy) // this isn't executed at all !
 {
   // printf("return value of time to tar: %f\n", 2 * vy / G);
   return 2 * vy / G;
+}
+
+float getRangeEscort(float v, float maxAngle, float minAngle) {
+    float maxRange = (pow(v, 2) * sin(2 * maxAngle)) / G;
+    float minRange = (pow(v, 2) * sin(2 * minAngle)) / G;
+    return fabs(maxRange - minRange); // Return absolute difference to ensure positive range
+}
+
+void impactB (SimState *sim, int escortType, int battleshipType) // include this in struct
+{
+  float escortshipX = 0;
+  float escortshipY = 0;
+  float v, maxAngle, minAngle;
+  switch(escortType)
+  {
+    case 1:
+      escortshipX = sim->escortA.x;
+      escortshipY = sim->escortA.y;
+      v = sim->escortA.v;
+      maxAngle = sim->escortA.maxAngle;
+      minAngle = sim->escortA.minAngle;
+    break;
+    case 2:
+      escortshipX = sim->escortB.x;
+      escortshipY = sim->escortB.y;
+      v = sim->escortB.v;
+      maxAngle = sim->escortB.maxAngle;
+      minAngle = sim->escortB.minAngle;
+    break;
+    case 3:
+      escortshipX = sim->escortC.x;
+      escortshipY = sim->escortC.y;
+      v = sim->escortB.v;
+      maxAngle = sim->escortC.maxAngle;
+      minAngle = sim->escortC.minAngle;
+    break;
+    case 4:
+      escortshipX = sim->escortD.x;
+      escortshipY = sim->escortD.y;
+      v = sim->escortD.v;
+      maxAngle = sim->escortD.maxAngle;
+      minAngle = sim->escortD.minAngle;
+    break;
+    case 5:
+      escortshipX = sim->escortE.x;
+      escortshipY = sim->escortE.y;
+      v = sim->escortE.v;
+      maxAngle = sim->escortE.maxAngle;
+      minAngle = sim->escortE.minAngle;
+    break;
+  }
+
+  float target_x = 0;
+  float target_y = 0;
+  short battleshipState;
+  SDL_Texture *battleshipTex;
+  switch(battleshipType)
+  {
+    case 1:
+      target_x = sim->battleU.x - 32;
+      target_y = sim->battleU.y -32;
+      battleshipState = sim->battleU.state; 
+      battleshipTex = sim->battleU.texB;
+    break;
+    case 2:
+      target_x = sim->battleM.x -32; 
+      target_y = sim->battleM.y -32;
+      battleshipState = sim->battleM.state; 
+      battleshipTex = sim->battleM.texB;
+    break;
+    case 3:
+      target_x = sim->battleR.x - 32;
+      target_y = sim->battleR.y - 32;
+      battleshipState = sim->battleR.state; 
+      battleshipTex = sim->battleR.texB;
+    break;
+    case 4:
+      target_x = sim->battleS.x - 32;
+      target_y = sim->battleS.y - 32;
+      battleshipState = sim->battleR.state; 
+      battleshipTex = sim->battleR.texB;
+    break;
+  }
+  double dx = target_x - escortshipX;
+  double dy = target_y - escortshipY;
+  double distance = sqrt(pow(dx, 2) + pow(dy, 2));
+  if (distance > getRangeEscort(v, maxAngle, minAngle))
+  {
+    // TODO: include battlship state here
+    printf("battleship destroyed!\n");
+    SDL_DestroyTexture(battleshipTex);
+  }
 }
 
 
@@ -648,6 +765,11 @@ int main (void)
     impactEC(&simState, battleshipType);
     impactED(&simState, battleshipType);
     impactEE(&simState, battleshipType);
+    impactB(&simState, simState.escortA.type, battleshipType);
+    impactB(&simState, simState.escortB.type, battleshipType);
+    impactB(&simState, simState.escortC.type, battleshipType);
+    impactB(&simState, simState.escortD.type, battleshipType);
+    impactB(&simState, simState.escortE.type, battleshipType);
   }
 
   // Free memory
