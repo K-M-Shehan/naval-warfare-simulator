@@ -724,10 +724,8 @@ void doRender (SDL_Renderer* renderer, SimState* sim, int battleshipType) // TOD
   SDL_RenderPresent(renderer);
 }
 
-
-int main (void) 
+void playSimulation ()
 {
-  
   SimState simState;
   SDL_Window* window = NULL;
   SDL_Renderer* renderer = NULL;
@@ -771,7 +769,6 @@ int main (void)
     impactB(&simState, simState.escortD.type, battleshipType);
     impactB(&simState, simState.escortE.type, battleshipType);
   }
-
   // Free memory
   SDL_DestroyTexture(simState.battleU.texB);
   SDL_DestroyTexture(simState.battleM.texB);
@@ -785,5 +782,87 @@ int main (void)
   SDL_DestroyTexture(simState.escortE.texE);
 
   cleanup(window, renderer);
+}
+
+void startSimulation() 
+{
+  int subChoice;
+
+  do {
+    printf("\nStart Simulation\n");
+    printf("1. Setup\n");
+    printf("2. Show Settings\n");
+    printf("3. Start\n");
+    printf("4. Back to Main Menu\n");
+    printf("Enter your choice: ");
+    scanf("%d", &subChoice);
+
+    switch(subChoice) {
+        case 1:
+            printf("Setup selected.\n");
+            // Add setup logic here
+            break;
+        case 2:
+            printf("Show Settings selected.\n");
+            // Add show settings logic here
+            break;
+        case 3:
+            printf("Start selected.\n");
+            playSimulation();
+            break;
+        case 4:
+            printf("Returning to Main Menu...\n");
+            break;
+        default:
+            printf("Invalid choice. Please enter a number between 1 and 4.\n");
+    }
+  } while (subChoice != 4);
+}
+
+void viewInstructions() {
+  printf("\nInstructions:\n");
+  // Print instructions here
+}
+
+void simulationStats() {
+  printf("\nSimulation Stats:\n");
+  // Print simulation statistics here
+}
+
+void mainMenu() 
+{
+  int choice;
+
+  do {
+    printf("\nMain Menu\n");
+    printf("1. Start Simulation\n");
+    printf("2. View Instructions\n");
+    printf("3. Simulation Stats\n");
+    printf("4. Exit\n");
+    printf("Enter your choice: ");
+    scanf("%d", &choice);
+
+    switch(choice) {
+        case 1:
+            startSimulation();
+            break;
+        case 2:
+            viewInstructions();
+            break;
+        case 3:
+            simulationStats();
+            break;
+        case 4:
+            printf("Exiting program...\n");
+            break;
+        default:
+            printf("Invalid choice. Please enter a number between 1 and 4.\n");
+    }
+  } while (choice != 4);
+}
+
+int main (void) 
+{
+  mainMenu(); 
   return 0;
 }
