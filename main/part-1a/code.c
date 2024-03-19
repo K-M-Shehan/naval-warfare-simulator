@@ -286,26 +286,26 @@ void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer) // load
   sim->battleR.angle = PI / 4;    // R
   sim->battleS.angle = PI / 4;    // S
 
-  // Max angle of escorts (90deg)
-  sim->escortA.maxAngle = PI / 2; // A 
-  sim->escortB.maxAngle = PI / 2; // B 
-  sim->escortC.maxAngle = PI / 2; // C 
-  sim->escortD.maxAngle = PI / 2; // D 
-  sim->escortE.maxAngle = PI / 2; // E
-  
-  // Min angle of escorts
-  sim->escortA.minAngle = PI / (18/7.0); // A - 20deg -> 90 - 20 = 70 
-  sim->escortB.minAngle = PI / 3; // B - 30deg
-  sim->escortC.minAngle = PI / (36/13.0); // C - 25deg
-  sim->escortD.minAngle = PI / (9/2.0); // D - 50deg
-  sim->escortE.minAngle = PI / 9; // E - 70deg
-  
   // Angle range of escorts
-  sim->escortA.angleR = sim->escortA.maxAngle - sim->escortA.minAngle; // A
-  sim->escortB.angleR = sim->escortB.maxAngle - sim->escortB.minAngle; // B
-  sim->escortC.angleR = sim->escortC.maxAngle - sim->escortC.minAngle; // C
-  sim->escortD.angleR = sim->escortD.maxAngle - sim->escortD.minAngle; // D
-  sim->escortE.angleR = sim->escortE.maxAngle - sim->escortE.minAngle; // E
+  sim->escortA.angleR = 20; // A
+  sim->escortB.angleR = 30; // B
+  sim->escortC.angleR = 25; // C
+  sim->escortD.angleR = 50; // D
+  sim->escortE.angleR = 70; // E
+  
+  // Min angle of escorts PI / 9 = 20deg
+  sim->escortA.minAngle = (rand() % 20) * (PI / 180);  // A 
+  sim->escortB.minAngle = (rand() % 20) * (PI / 180);  // B
+  sim->escortC.minAngle = (rand() % 20) * (PI / 180);  // C
+  sim->escortD.minAngle = (rand() % 20) * (PI / 180);  // D 
+  sim->escortE.minAngle = (rand() % 20) * (PI / 180);  // E
+  
+  // Max angle of escorts (the max angle will be smaller than 90)
+  sim->escortA.maxAngle = sim->escortA.minAngle + sim->escortA.angleR;
+  sim->escortB.maxAngle = sim->escortB.minAngle + sim->escortB.angleR; 
+  sim->escortC.maxAngle = sim->escortC.minAngle + sim->escortC.angleR;  
+  sim->escortD.maxAngle = sim->escortD.minAngle + sim->escortD.angleR;  
+  sim->escortE.maxAngle = sim->escortE.minAngle + sim->escortE.angleR; 
 
   // Type of escorts
   sim->escortA.type = 1; // A
@@ -314,6 +314,7 @@ void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer) // load
   sim->escortD.type = 4; // D
   sim->escortE.type = 5; // E
 }
+ 
 
 float getRange (float v, float angle)
 {
@@ -321,10 +322,10 @@ float getRange (float v, float angle)
   return (pow(v, 2) * sin(2 * angle)) / G;
 }
 
-float getTimeToTarget (float y, float vy) // this isn't executed at all !
+float getTimeToTarget (float v) // this isn't executed at all !
 {
   // printf("return value of time to tar: %f\n", 2 * vy / G);
-  return 2 * vy / G;
+  return 2 * (v / G);
 }
 
 float getRangeEscort(float v, float maxAngle, float minAngle) {
@@ -333,7 +334,7 @@ float getRangeEscort(float v, float maxAngle, float minAngle) {
     return fabs(maxRange - minRange); // Return absolute difference to ensure positive range
 }
 
-void impactB (SimState *sim, int escortType, int battleshipType) // include this in struct
+void impactB (SimState *sim, int escortType, int battleshipType, short *battleshipState) // include this in struct
 {
   float escortshipX = 0;
   float escortshipY = 0;
@@ -379,32 +380,27 @@ void impactB (SimState *sim, int escortType, int battleshipType) // include this
 
   float target_x = 0;
   float target_y = 0;
-  short battleshipState;
   SDL_Texture *battleshipTex;
   switch(battleshipType)
   {
     case 1:
       target_x = sim->battleU.x - 32;
       target_y = sim->battleU.y -32;
-      battleshipState = sim->battleU.state; 
       battleshipTex = sim->battleU.texB;
     break;
     case 2:
       target_x = sim->battleM.x -32; 
       target_y = sim->battleM.y -32;
-      battleshipState = sim->battleM.state; 
       battleshipTex = sim->battleM.texB;
     break;
     case 3:
       target_x = sim->battleR.x - 32;
       target_y = sim->battleR.y - 32;
-      battleshipState = sim->battleR.state; 
       battleshipTex = sim->battleR.texB;
     break;
     case 4:
       target_x = sim->battleS.x - 32;
       target_y = sim->battleS.y - 32;
-      battleshipState = sim->battleR.state; 
       battleshipTex = sim->battleR.texB;
     break;
   }
@@ -413,7 +409,8 @@ void impactB (SimState *sim, int escortType, int battleshipType) // include this
   double distance = sqrt(pow(dx, 2) + pow(dy, 2));
   if (distance > getRangeEscort(v, maxAngle, minAngle))
   {
-    // TODO: include battlship state here
+    *battleshipState = 0;
+    //printf("BState: %hd\n", *battleshipState);
     printf("battleship destroyed!\n");
     SDL_DestroyTexture(battleshipTex);
   }
@@ -660,7 +657,7 @@ void impactEE (SimState *sim, int battleshipType)
 int processEvents (SDL_Window* window, SimState *sim) // TODO: include structs in this to move around idk
 {
   SDL_Event event;
-  int done = 0;
+   int done = 0;
 
   while (SDL_PollEvent(&event))
   {
@@ -724,7 +721,8 @@ void doRender (SDL_Renderer* renderer, SimState* sim, int battleshipType) // TOD
   SDL_RenderPresent(renderer);
 }
 
-void playSimulation ()
+
+void playSimulation (int battleshipType)
 {
   SimState simState;
   SDL_Window* window = NULL;
@@ -749,25 +747,42 @@ void playSimulation ()
   renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC); 
    
   loadSim(&simState, window, renderer);
-  
+
+  short *battleshipState;
+  switch(battleshipType)
+  {
+    case 1:
+      battleshipState = &simState.battleU.state; 
+    break;
+    case 2:
+      battleshipState = &simState.battleM.state; 
+    break;
+    case 3:
+      battleshipState = &simState.battleR.state; 
+    break;
+    case 4:
+      battleshipState = &simState.battleR.state; 
+    break;
+  } 
+
   // Running events
   int done = 0;
   while (!done)
   {  
     // Check for events
     done = processEvents(window, &simState);
-    int battleshipType = 1;
+    //int battleshipType = 1;
     doRender(renderer, &simState, battleshipType); // the 3rd arg is the battleship type (using ints for now)
     impactEA(&simState, battleshipType);
     impactEB(&simState, battleshipType);
     impactEC(&simState, battleshipType);
     impactED(&simState, battleshipType);
     impactEE(&simState, battleshipType);
-    impactB(&simState, simState.escortA.type, battleshipType);
-    impactB(&simState, simState.escortB.type, battleshipType);
-    impactB(&simState, simState.escortC.type, battleshipType);
-    impactB(&simState, simState.escortD.type, battleshipType);
-    impactB(&simState, simState.escortE.type, battleshipType);
+    impactB(&simState, simState.escortA.type, battleshipType, battleshipState);
+    impactB(&simState, simState.escortB.type, battleshipType, battleshipState);
+    impactB(&simState, simState.escortC.type, battleshipType, battleshipState);
+    impactB(&simState, simState.escortD.type, battleshipType, battleshipState);
+    impactB(&simState, simState.escortE.type, battleshipType, battleshipState);
   }
   // Free memory
   SDL_DestroyTexture(simState.battleU.texB);
@@ -784,39 +799,81 @@ void playSimulation ()
   cleanup(window, renderer);
 }
 
+int setup() {
+    int setupChoice;
+    int battleshipType;
+
+    do {
+        printf("\nSetup\n");
+        printf("1. Battleship Settings\n");
+        printf("2. Escorts in simulation\n");
+        printf("3. Back to Start Simulation Menu\n");
+        printf("Enter your choice: ");
+        scanf("%d", &setupChoice);
+
+        switch(setupChoice) {
+            case 1:
+                printf("Battleship settings...\n");
+                printf("\nChoose your desired Battleship\n");
+                printf("1. USS Iowa (BB-61)\n");
+                printf("2. MS King George V\n");
+                printf("3. Richelieu\n");
+                printf("4. Sovetsky Soyuz-class\n");
+                printf("Enter your choice: ");
+                scanf("%d", &battleshipType);
+                printf("\nChosen type: %d\n", battleshipType);
+                while (battleshipType < 0 || battleshipType >= 5)
+                {
+                  printf("Number entered is not valid, number must be between 1-4\n");
+                  printf("Enter your choice: ");
+                  scanf("%d", &battleshipType);
+                  printf("\nChosen type: %d\n", battleshipType);
+                }
+                break;
+            case 2:
+                printf("Escortship settings...\n");
+                break;
+            case 3:
+                printf("Returning to start simulation menu...\n");
+                break;
+            default:
+                printf("Invalid choice. Please enter a number between 1 and 3.\n");
+        }
+    } while(setupChoice != 3);
+  return battleshipType;
+}
+
 void startSimulation() 
 {
   int subChoice;
+  int battleshipType;
 
   do {
     printf("\nStart Simulation\n");
     printf("1. Setup\n");
-    printf("2. Show Settings\n");
-    printf("3. Start\n");
-    printf("4. Back to Main Menu\n");
+    printf("2. Show Simulation\n");
+    printf("3. Back to Main Menu\n");
+    printf("Please note that you have to select a battleship before running the simulation\n");
     printf("Enter your choice: ");
     scanf("%d", &subChoice);
 
     switch(subChoice) {
         case 1:
             printf("Setup selected.\n");
-            // Add setup logic here
+            battleshipType = setup();
+            printf("Chosen type: %d\n", battleshipType);
             break;
         case 2:
-            printf("Show Settings selected.\n");
-            // Add show settings logic here
+            printf("Opening simulation...\n"); 
+            playSimulation(battleshipType);
             break;
         case 3:
-            printf("Start selected.\n");
-            playSimulation();
-            break;
-        case 4:
             printf("Returning to Main Menu...\n");
             break;
         default:
-            printf("Invalid choice. Please enter a number between 1 and 4.\n");
+            printf("Invalid choice. Please enter a number between 1 and 3.\n");
     }
-  } while (subChoice != 4);
+  } while (subChoice != 3);
 }
 
 void viewInstructions() {
