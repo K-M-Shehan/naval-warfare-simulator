@@ -3,6 +3,7 @@
 #include <math.h>
 #include <stdbool.h>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_timer.h>
 #include <SDL2/SDL_image.h>
 #include <time.h>
 #define WINDOW_SIZE 300
@@ -19,35 +20,40 @@ typedef struct
   char* timeActive; // time spent in simulator
   char* name;       // name of escort ship       
   int id;           // unique id
-  SDL_Texture *texE;
+  SDL_Texture *texE;// texture of escort ship
+  int angle;
+  float v;
 } EscortShip;
 
 typedef struct
 {
-  int x, y;
-  float angle;
-  float v;
-  SDL_Texture *texB;
+  int x, y;         // position
+  float angle;      // max vertical angle of shell movement
+  float v;          // max (initial velocity) of battle ship
+  SDL_Texture *texB;// texture of battleship
+  char *name;
+  char* timeActive;
+  short state;
 } Battleship;
 
 typedef struct
 {
-  int x, y;
-  SDL_Texture *texS;
+  int x, y;         // position
+  SDL_Texture *texS;// texture of shell
 } Shell;
 
 typedef struct
 {
   /*Main Sprites*/
   // Escorts
-  EscortShip escortA, escortB, escortC, escortD, escortE;   // you could also use an array to draw these
+  EscortShip escortA, escortB, escortC, escortD, escortE;   // you could also use an array to draw these, but i'm an idiot so i did this
   // Battleships
   Battleship battleU, battleM, battleR, battleS;  // all of these types would use the same sprite
   // Shell
-  Shell shellB, shellC;
+  Shell shellBEA, shellBEB, shellBEC, shellBED, shellBEE, shellEA, shellEB, shellEC, shellED, shellEE; // same sprite used to render these shells
 } SimState;
 
-void cleanup (SDL_Window* window, SDL_Renderer* renderer)
+void cleanup (SDL_Window* window, SDL_Renderer* renderer) // cleans window and renderer to prevent memory leaks
 {
    // Cleanup
   SDL_DestroyWindow(window);
@@ -55,7 +61,7 @@ void cleanup (SDL_Window* window, SDL_Renderer* renderer)
   SDL_Quit();
 }
 
-void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer)
+void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer) // loads sprites of battlship and all escorts
 {  
   SDL_Surface *battleUSurface = NULL;
   SDL_Surface *battleMSurface = NULL;
@@ -69,7 +75,8 @@ void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer)
   SDL_Surface *escortESurface = NULL;
   // Load images and render textures
   
-  // Load battleship image
+  // Load battleship image into surfaces
+  // U
   battleUSurface = IMG_Load("resources/battleship.png");
   if (battleUSurface == NULL)
   {
@@ -82,13 +89,15 @@ void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer)
   sim->battleU.texB = SDL_CreateTextureFromSurface(renderer, battleUSurface);
   SDL_FreeSurface(battleUSurface);
   
+  // check if texture is NULL, error handling for when texture failed to be created
   if (sim->battleU.texB == NULL)
   {
     printf("Failed to create battleshipU texture from surface: %s\n", SDL_GetError());
     cleanup(window, renderer);
-    exit(1);
+    exit(1); // exit the program
   }
 
+  // M
   battleMSurface = IMG_Load("resources/battleship.png");
   if (battleMSurface == NULL)
   {
@@ -108,6 +117,7 @@ void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer)
     exit(1);
   }
  
+  // R
   battleRSurface = IMG_Load("resources/battleship.png");
   if (battleRSurface == NULL)
   {
@@ -127,6 +137,7 @@ void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer)
     exit(1);
   }
  
+  // S
   battleSSurface = IMG_Load("resources/battleship.png");
   if (battleSSurface == NULL)
   {
@@ -147,7 +158,8 @@ void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer)
   }
 
 
-  // Load escortships' images
+  // Load escortships' images into surfaces
+  // A
   escortASurface = IMG_Load("resources/escortshipA.png");
   if (escortASurface == NULL)
   {
@@ -155,7 +167,9 @@ void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer)
     cleanup(window, renderer);
     exit(1);
   }
-   escortBSurface = IMG_Load("resources/escortshipB.png");
+  // TODO: add errror handling for all escorts for when texture fails to be made from surface
+  // B
+  escortBSurface = IMG_Load("resources/escortshipB.png");
   if (escortBSurface == NULL)
   {
     printf("Cannot find escortshipB.png!\n\n");
@@ -163,6 +177,7 @@ void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer)
     exit(1);
   }
 
+  // C
   escortCSurface = IMG_Load("resources/escortshipC.png");
   if (escortCSurface == NULL)
   {
@@ -171,6 +186,7 @@ void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer)
     exit(1);
   }
 
+  // D
   escortDSurface = IMG_Load("resources/escortshipD.png");
   if (escortDSurface == NULL)
   {
@@ -179,6 +195,7 @@ void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer)
     exit(1);
   }
 
+  // E
   escortESurface = IMG_Load("resources/escortshipE.png");
   if (escortESurface == NULL)
   {
@@ -204,50 +221,68 @@ void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer)
   SDL_FreeSurface(escortESurface);
 
   // x and y positions of battleships
+  // U
   sim->battleU.x = 50;
   sim->battleU.y = WINDOW_SIZE - (64+50);
 
+  // M
   sim->battleM.x = 50;
   sim->battleM.y = WINDOW_SIZE - (64+50);
 
+  // R
   sim->battleR.x = 50;
   sim->battleR.y = WINDOW_SIZE - (64+50);
 
+  // S
   sim->battleS.x = 50;
   sim->battleS.y = WINDOW_SIZE - (64+50);
 
 
-  // x and y positions of escorts
+  // x and y positions of escorts (positions are random within the window)
+  // A
   sim->escortA.x = rand() % (WINDOW_SIZE - 64);
   sim->escortA.y = rand() % (WINDOW_SIZE - 64);
 
+  // B
   sim->escortB.x = rand() % (WINDOW_SIZE - 64);
   sim->escortB.y = rand() % (WINDOW_SIZE - 64);
 
+  // C
   sim->escortC.x = rand() % (WINDOW_SIZE - 64);
   sim->escortC.y = rand() % (WINDOW_SIZE - 64);
   
+  // D
   sim->escortD.x = rand() % (WINDOW_SIZE - 64);
   sim->escortD.y = rand() % (WINDOW_SIZE - 64);
   
+  // E
   sim->escortE.x = rand() % (WINDOW_SIZE - 64);
   sim->escortE.y = rand() % (WINDOW_SIZE - 64);
 
   // v of battleships
-  sim->battleU.v = 35;
-  sim->battleM.v = 35;
-  sim->battleR.v = 35;
-  sim->battleS.v = 35;
+  sim->battleU.v = 35;    // U
+  sim->battleM.v = 35;    // M
+  sim->battleR.v = 35;    // R
+  sim->battleS.v = 35;    // S
 
-  // state of escorts
-  sim->escortA.state = 1;
-  sim->escortB.state = 1;
-  sim->escortC.state = 1;
-  sim->escortD.state = 1;
-  sim->escortE.state = 1;
+  // v of escorts
+  sim->escortA.v = 35 * 1.2; //A
+  sim->escortB.v = rand() % 35;
+  sim->escortC.v = rand() % 35;
+  sim->escortD.v = rand() % 35;
+  sim->escortE.v = rand() % 35;
+
+  // state of escorts (1 means alive, 0 is when its destroyed)
+  sim->escortA.state = 1; // A
+  sim->escortB.state = 1; // B
+  sim->escortC.state = 1; // C
+  sim->escortD.state = 1; // D
+  sim->escortE.state = 1; // E
+  
+  // state of battlships (1 = alive, 0 = destroyed) 
 }
 
-void drawBattleShell (SDL_Renderer *renderer, SDL_Window *window, SimState *sim)
+void drawEscortShellA (SDL_Renderer *renderer, SDL_Window *window, SimState *sim)   // renders shellE
 {
   // Load the shell image and put it into a surface
   SDL_Surface *shellSurface = NULL;
@@ -260,19 +295,247 @@ void drawBattleShell (SDL_Renderer *renderer, SDL_Window *window, SimState *sim)
   }
 
   // Create texture from surface and free surface
-  sim->shellB.texS = SDL_CreateTextureFromSurface(renderer, shellSurface);
+  sim->shellEA.texS = SDL_CreateTextureFromSurface(renderer, shellSurface);
   SDL_FreeSurface(shellSurface);
 
   // x and y positions of the shell at initial point
-  sim->shellB.x = 50;
-  sim->shellB.y = WINDOW_SIZE - (64+50);
+  sim->shellEA.x = sim->escortA.x;
+  sim->shellEA.y = sim->escortA.y;
 
-  SDL_Rect shellBRect = { sim->shellB.x, sim->shellB.y, 10, 10};
-  SDL_RenderCopy(renderer, sim->shellB.texS, NULL, &shellBRect);
+  SDL_Rect shellEARect = { sim->shellEA.x, sim->shellEA.y, 10, 10};
+  SDL_RenderCopy(renderer, sim->shellEA.texS, NULL, &shellEARect);
   SDL_RenderPresent(renderer);
 }
 
-bool checkCollisionEscortA(SimState *sim)
+void drawEscortShellB (SDL_Renderer *renderer, SDL_Window *window, SimState *sim)   // renders shellEB
+{
+  // Load the shell image and put it into a surface
+  SDL_Surface *shellSurface = NULL;
+  shellSurface = IMG_Load("resources/shell.png");
+  if (shellSurface == NULL)
+  {
+    printf("Cannot find shell.png!\n\n");
+    cleanup(window, renderer);
+    exit(1);
+  }
+
+  // Create texture from surface and free surface
+  sim->shellEB.texS = SDL_CreateTextureFromSurface(renderer, shellSurface);
+  SDL_FreeSurface(shellSurface);
+
+  // x and y positions of the shell at initial point
+  sim->shellEB.x = sim->escortB.x;
+  sim->shellEB.y = sim->escortB.y;
+
+  SDL_Rect shellEBRect = { sim->shellEB.x, sim->shellEB.y, 10, 10};
+  SDL_RenderCopy(renderer, sim->shellEB.texS, NULL, &shellEBRect);
+  SDL_RenderPresent(renderer);
+}
+
+void drawEscortShellC (SDL_Renderer *renderer, SDL_Window *window, SimState *sim)   // renders shellEC
+{
+  // Load the shell image and put it into a surface
+  SDL_Surface *shellSurface = NULL;
+  shellSurface = IMG_Load("resources/shell.png");
+  if (shellSurface == NULL)
+  {
+    printf("Cannot find shell.png!\n\n");
+    cleanup(window, renderer);
+    exit(1);
+  }
+
+  // Create texture from surface and free surface
+  sim->shellEC.texS = SDL_CreateTextureFromSurface(renderer, shellSurface);
+  SDL_FreeSurface(shellSurface);
+
+  // x and y positions of the shell at initial point
+  sim->shellEC.x = sim->escortC.x;
+  sim->shellEC.y = sim->escortC.y;
+
+  SDL_Rect shellECRect = { sim->shellEC.x, sim->shellEC.y, 10, 10};
+  SDL_RenderCopy(renderer, sim->shellEC.texS, NULL, &shellECRect);
+  SDL_RenderPresent(renderer);
+}
+
+void drawEscortShellD (SDL_Renderer *renderer, SDL_Window *window, SimState *sim)   // renders shellED
+{
+  // Load the shell image and put it into a surface
+  SDL_Surface *shellSurface = NULL;
+  shellSurface = IMG_Load("resources/shell.png");
+  if (shellSurface == NULL)
+  {
+    printf("Cannot find shell.png!\n\n");
+    cleanup(window, renderer);
+    exit(1);
+  }
+
+  // Create texture from surface and free surface
+  sim->shellED.texS = SDL_CreateTextureFromSurface(renderer, shellSurface);
+  SDL_FreeSurface(shellSurface);
+
+  // x and y positions of the shell at initial point
+  sim->shellED.x = sim->escortD.x;
+  sim->shellED.y = sim->escortD.y;
+
+  SDL_Rect shellEDRect = { sim->shellED.x, sim->shellED.y, 10, 10};
+  SDL_RenderCopy(renderer, sim->shellED.texS, NULL, &shellEDRect);
+  SDL_RenderPresent(renderer);
+}
+
+void drawEscortShellE (SDL_Renderer *renderer, SDL_Window *window, SimState *sim)   // renders shellEE
+{
+  // Load the shell image and put it into a surface
+  SDL_Surface *shellSurface = NULL;
+  shellSurface = IMG_Load("resources/shell.png");
+  if (shellSurface == NULL)
+  {
+    printf("Cannot find shell.png!\n\n");
+    cleanup(window, renderer);
+    exit(1);
+  }
+
+  // Create texture from surface and free surface
+  sim->shellEE.texS = SDL_CreateTextureFromSurface(renderer, shellSurface);
+  SDL_FreeSurface(shellSurface);
+
+  // x and y positions of the shell at initial point
+  sim->shellEE.x = sim->escortE.x;
+  sim->shellEE.y = sim->escortE.y;
+
+  SDL_Rect shellEERect = { sim->shellEE.x, sim->shellEE.y, 10, 10};
+  SDL_RenderCopy(renderer, sim->shellEE.texS, NULL, &shellEERect);
+  SDL_RenderPresent(renderer);
+}
+
+
+
+void drawBattleShellA (SDL_Renderer *renderer, SDL_Window *window, SimState *sim)   // renders shellBEA
+{
+  // Load the shell image and put it into a surface
+  SDL_Surface *shellSurface = NULL;
+  shellSurface = IMG_Load("resources/shell.png");
+  if (shellSurface == NULL)
+  {
+    printf("Cannot find shell.png!\n\n");
+    cleanup(window, renderer);
+    exit(1);
+  }
+
+  // Create texture from surface and free surface
+  sim->shellBEA.texS = SDL_CreateTextureFromSurface(renderer, shellSurface);
+  SDL_FreeSurface(shellSurface);
+
+  // x and y positions of the shell at initial point
+  sim->shellBEA.x = 50;
+  sim->shellBEA.y = WINDOW_SIZE - (64+50);
+
+  SDL_Rect shellBEARect = { sim->shellBEA.x, sim->shellBEA.y, 10, 10};
+  SDL_RenderCopy(renderer, sim->shellBEA.texS, NULL, &shellBEARect);
+  SDL_RenderPresent(renderer);
+}
+
+void drawBattleShellB (SDL_Renderer *renderer, SDL_Window *window, SimState *sim)
+{
+  // Load the shell image and put it into a surface
+  SDL_Surface *shellSurface = NULL;
+  shellSurface = IMG_Load("resources/shell.png");
+  if (shellSurface == NULL)
+  {
+    printf("Cannot find shell.png!\n\n");
+    cleanup(window, renderer);
+    exit(1);
+  }
+
+  // Create texture from surface and free surface
+  sim->shellBEB.texS = SDL_CreateTextureFromSurface(renderer, shellSurface);
+  SDL_FreeSurface(shellSurface);
+
+  // x and y positions of the shell at initial point
+  sim->shellBEB.x = 50;
+  sim->shellBEB.y = WINDOW_SIZE - (64+50);
+
+  SDL_Rect shellBEBRect = { sim->shellBEB.x, sim->shellBEB.y, 10, 10};
+  SDL_RenderCopy(renderer, sim->shellBEB.texS, NULL, &shellBEBRect);
+  SDL_RenderPresent(renderer);
+}
+
+void drawBattleShellC (SDL_Renderer *renderer, SDL_Window *window, SimState *sim)
+{
+  // Load the shell image and put it into a surface
+  SDL_Surface *shellSurface = NULL;
+  shellSurface = IMG_Load("resources/shell.png");
+  if (shellSurface == NULL)
+  {
+    printf("Cannot find shell.png!\n\n");
+    cleanup(window, renderer);
+    exit(1);
+  }
+
+  // Create texture from surface and free surface
+  sim->shellBEC.texS = SDL_CreateTextureFromSurface(renderer, shellSurface);
+  SDL_FreeSurface(shellSurface);
+
+  // x and y positions of the shell at initial point
+  sim->shellBEC.x = 50;
+  sim->shellBEC.y = WINDOW_SIZE - (64+50);
+
+  SDL_Rect shellBECRect = { sim->shellBEC.x, sim->shellBEC.y, 10, 10};
+  SDL_RenderCopy(renderer, sim->shellBEC.texS, NULL, &shellBECRect);
+  SDL_RenderPresent(renderer);
+}
+
+void drawBattleShellD (SDL_Renderer *renderer, SDL_Window *window, SimState *sim)
+{
+  // Load the shell image and put it into a surface
+  SDL_Surface *shellSurface = NULL;
+  shellSurface = IMG_Load("resources/shell.png");
+  if (shellSurface == NULL)
+  {
+    printf("Cannot find shell.png!\n\n");
+    cleanup(window, renderer);
+    exit(1);
+  }
+
+  // Create texture from surface and free surface
+  sim->shellBED.texS = SDL_CreateTextureFromSurface(renderer, shellSurface);
+  SDL_FreeSurface(shellSurface);
+
+  // x and y positions of the shell at initial point
+  sim->shellBED.x = 50;
+  sim->shellBED.y = WINDOW_SIZE - (64+50);
+
+  SDL_Rect shellBEDRect = { sim->shellBED.x, sim->shellBED.y, 10, 10};
+  SDL_RenderCopy(renderer, sim->shellBED.texS, NULL, &shellBEDRect);
+  SDL_RenderPresent(renderer);
+}
+
+void drawBattleShellE (SDL_Renderer *renderer, SDL_Window *window, SimState *sim)
+{
+  // Load the shell image and put it into a surface
+  SDL_Surface *shellSurface = NULL;
+  shellSurface = IMG_Load("resources/shell.png");
+  if (shellSurface == NULL)
+  {
+    printf("Cannot find shell.png!\n\n");
+    cleanup(window, renderer);
+    exit(1);
+  }
+
+  // Create texture from surface and free surface
+  sim->shellBEE.texS = SDL_CreateTextureFromSurface(renderer, shellSurface);
+  SDL_FreeSurface(shellSurface);
+
+  // x and y positions of the shell at initial point
+  sim->shellBEE.x = 50;
+  sim->shellBEE.y = WINDOW_SIZE - (64+50);
+
+  SDL_Rect shellBEERect = { sim->shellBEE.x, sim->shellBEE.y, 10, 10};
+  SDL_RenderCopy(renderer, sim->shellBEE.texS, NULL, &shellBEERect);
+  SDL_RenderPresent(renderer);
+}
+
+
+bool checkCollisionEscortA(SimState *sim)     // collision detection for shell and escortA
 {
   // calculate corner coordinates
   int escortTopRightX = sim->escortA.x;
@@ -280,10 +543,10 @@ bool checkCollisionEscortA(SimState *sim)
   int escortBotLeftX = sim->escortA.x + (64-1);
   int escortBotLeftY = sim->escortA.y + (64-1);
 
-  int shellTopRightX = sim->shellB.x;
-  int shellTopRightY = sim->shellB.y;
-  int shellBotLeftX = sim->shellB.x + (10-1);
-  int shellBotLeftY = sim->shellB.y + (10-1);
+  int shellTopRightX = sim->shellBEA.x;
+  int shellTopRightY = sim->shellBEA.y;
+  int shellBotLeftX = sim->shellBEA.x + (10-1);
+  int shellBotLeftY = sim->shellBEA.y + (10-1);
 
   // check for collision
   if ((shellTopRightX <= escortBotLeftX) &&
@@ -291,8 +554,8 @@ bool checkCollisionEscortA(SimState *sim)
       (shellTopRightY <= escortBotLeftY) &&
       (shellBotLeftY >= escortTopRightY))
   {
-    return true;
     printf("collision is true\n");
+    return true;
   }
   else
   {
@@ -308,10 +571,10 @@ bool checkCollisionEscortB(SimState *sim)
   int escortBotLeftX = sim->escortB.x + (64-1);
   int escortBotLeftY = sim->escortB.y + (64-1);
 
-  int shellTopRightX = sim->shellB.x;
-  int shellTopRightY = sim->shellB.y;
-  int shellBotLeftX = sim->shellB.x + (10-1);
-  int shellBotLeftY = sim->shellB.y + (10-1);
+  int shellTopRightX = sim->shellBEB.x;
+  int shellTopRightY = sim->shellBEB.y;
+  int shellBotLeftX = sim->shellBEB.x + (10-1);
+  int shellBotLeftY = sim->shellBEB.y + (10-1);
 
   // check for collision
   if ((shellTopRightX <= escortBotLeftX) &&
@@ -335,10 +598,10 @@ bool checkCollisionEscortC(SimState *sim)
   int escortBotLeftX = sim->escortC.x + (64-1);
   int escortBotLeftY = sim->escortC.y + (64-1);
 
-  int shellTopRightX = sim->shellB.x;
-  int shellTopRightY = sim->shellB.y;
-  int shellBotLeftX = sim->shellB.x + (10-1);
-  int shellBotLeftY = sim->shellB.y + (10-1);
+  int shellTopRightX = sim->shellBEC.x;
+  int shellTopRightY = sim->shellBEC.y;
+  int shellBotLeftX = sim->shellBEC.x + (10-1);
+  int shellBotLeftY = sim->shellBEC.y + (10-1);
 
   // check for collision
   if ((shellTopRightX <= escortBotLeftX) &&
@@ -362,10 +625,10 @@ bool checkCollisionEscortD(SimState *sim)
   int escortBotLeftX = sim->escortD.x + (64-1);
   int escortBotLeftY = sim->escortD.y + (64-1);
 
-  int shellTopRightX = sim->shellB.x;
-  int shellTopRightY = sim->shellB.y;
-  int shellBotLeftX = sim->shellB.x + (10-1);
-  int shellBotLeftY = sim->shellB.y + (10-1);
+  int shellTopRightX = sim->shellBED.x;
+  int shellTopRightY = sim->shellBED.y;
+  int shellBotLeftX = sim->shellBED.x + (10-1);
+  int shellBotLeftY = sim->shellBED.y + (10-1);
 
   // check for collision
   if ((shellTopRightX <= escortBotLeftX) &&
@@ -389,10 +652,10 @@ bool checkCollisionEscortE(SimState *sim)
   int escortBotLeftX = sim->escortE.x + (64-1);
   int escortBotLeftY = sim->escortE.y + (64-1);
 
-  int shellTopRightX = sim->shellB.x;
-  int shellTopRightY = sim->shellB.y;
-  int shellBotLeftX = sim->shellB.x + (10-1);
-  int shellBotLeftY = sim->shellB.y + (10-1);
+  int shellTopRightX = sim->shellBEE.x;
+  int shellTopRightY = sim->shellBEE.y;
+  int shellBotLeftX = sim->shellBEE.x + (10-1);
+  int shellBotLeftY = sim->shellBEE.y + (10-1);
 
   // check for collision
   if ((shellTopRightX <= escortBotLeftX) &&
@@ -408,9 +671,9 @@ bool checkCollisionEscortE(SimState *sim)
   }
 }
 
-float getRange (float v)
+float getRangeB (float v)
 {
-  const float angle = PI / 4;
+  const float angle = PI/4;
   // printf("return value of range: %f\n", (pow(v, 2) * sin(2 * angle)) / G);
   return (pow(v, 2) * sin(2 * angle)) / G;
 }
@@ -421,6 +684,7 @@ float getTimeToTarget (float y, float vy) // this isn't executed at all !
   return 2 * vy / G;
 }
 
+// Pray to god that it works
 void fireShellToEscortA (SDL_Renderer *renderer, SDL_Window *window, SimState *sim, int battleshipType)
 {
   float battleshipX = 0;
@@ -459,8 +723,8 @@ void fireShellToEscortA (SDL_Renderer *renderer, SDL_Window *window, SimState *s
   double dist = sqrt(pow(dx, 2) + pow(dy, 2));
   // printf("distance: %lf\n", dist); // remove this after
   
-  double vx = v * dx / dist;
-  double vy = v * dy / dist;
+  double vx = fabs(dx) * v / dist;
+  double vy = fabs(dy) * v / dist;
   vx = fabs(vx);
   vy = fabs(vy);
   //printf("vx: %lf\n", vx);
@@ -471,12 +735,13 @@ void fireShellToEscortA (SDL_Renderer *renderer, SDL_Window *window, SimState *s
   // printf("x: %f\n", x);
   // printf("y: %f\n", y);
   float time = 0;
-  
-  while (y > 0 && dist <= getRange(v) && time < 5)
+  printf("shell position: (%f, %f)", x, y);  
+  while (y > 0 && dist <= getRangeB(v))
   {
+    float dt = 0.2f;
     // Update position
-    x += vx * time;
-    y += vy * time - 0.5f * G * pow(time, 2);
+    x += vx / 60; // * //dt;
+    y += vy / 60; // * //dt - 0.5f * G * pow(dt, 2);
     // check for collision
     if (checkCollisionEscortA(sim))
     {
@@ -485,19 +750,25 @@ void fireShellToEscortA (SDL_Renderer *renderer, SDL_Window *window, SimState *s
       SDL_DestroyTexture(sim->escortA.texE);
       break;
     }
-      sim->shellB.x = (int) x;
-      sim->shellB.y = (int) y;
-      
+
+      x += 
+      sim->shellBEA.x = (int) x;
+      sim->shellBEA.y = (int) y;
+      printf("shell position: (%f, %f)", x, y);
+      if (checkCollisionEscortA(sim))
+    {
+      sim->escortA.state = 0; // that means destroyed
+      printf("escortA destroyed!\n");
+      SDL_DestroyTexture(sim->escortA.texE);
+      break;
+    }
       // draw shell
-      drawBattleShell(renderer, window, sim);
+      drawBattleShellA(renderer, window, sim);
+      SDL_Delay(1000/60);
       if (time > getTimeToTarget(battleshipY, vy))
-      {
         break;
-      }
       else
-      {
-        time += 0.1f; // Adjust time
-      }
+        time += dt; // Adjust time
   }
 }
 
@@ -539,8 +810,8 @@ void fireShellToEscortB (SDL_Renderer *renderer, SDL_Window *window, SimState *s
   double dist = sqrt(pow(dx, 2) + pow(dy, 2));
   // printf("distance: %lf\n", dist); // remove this after
   
-  double vx = v * dx / dist;
-  double vy = v * dy / dist;
+  double vx = fabs(dx) * v / dist;
+  double vy = fabs(dy) * v / dist;
   vx = fabs(vx);
   vy = fabs(vy);
   //printf("vx: %lf\n", vx);
@@ -551,12 +822,13 @@ void fireShellToEscortB (SDL_Renderer *renderer, SDL_Window *window, SimState *s
   // printf("x: %f\n", x);
   // printf("y: %f\n", y);
   float time = 0;
-  
-  while (y > 0 && dist <= getRange(v) && time < 5)
+  printf("shell position: (%f, %f)", x, y);
+  while (y > 0 && dist <= getRangeB(v))
   {
+    float dt = 0.2f;
     // Update position
-    x += vx * time;
-    y += vy * time - 0.5f * G * pow(time, 2);
+    x += vx * dt;
+    y += vy * dt - 0.5f * G * pow(dt, 2);
     // check for collision
     if (checkCollisionEscortB(sim))
     {
@@ -566,19 +838,23 @@ void fireShellToEscortB (SDL_Renderer *renderer, SDL_Window *window, SimState *s
       SDL_DestroyTexture(sim->escortB.texE);
       break;
     }
-      sim->shellB.x = (int) x;
-      sim->shellB.y = (int) y;
-      
+      sim->shellBEB.x = (int) x;
+      sim->shellBEB.y = (int) y;
+      printf("shell position: (%f, %f)", x, y);
+      if (checkCollisionEscortB(sim))
+    {
+      sim->escortB.state = 0; // that means destroyed
+
+      printf("escortB destroyed!\n");
+      SDL_DestroyTexture(sim->escortB.texE);
+      break;
+    }
       // draw shell
-      drawBattleShell(renderer, window, sim);
+      drawBattleShellB(renderer, window, sim);
       if (time > getTimeToTarget(battleshipY, vy))
-      {
         break;
-      }
       else
-      {
-        time += 0.1f; // Adjust time
-      }
+        time += dt; // Adjust time
   }
 } 
 
@@ -620,8 +896,8 @@ void fireShellToEscortC (SDL_Renderer *renderer, SDL_Window *window, SimState *s
   double dist = sqrt(pow(dx, 2) + pow(dy, 2));
   // printf("distance: %lf\n", dist); // remove this after
   
-  double vx = v * dx / dist;
-  double vy = v * dy / dist;
+  double vx = fabs(dx) * v / dist;
+  double vy = fabs(dy) * v / dist;
   vx = fabs(vx);
   vy = fabs(vy);
   //printf("vx: %lf\n", vx);
@@ -632,12 +908,13 @@ void fireShellToEscortC (SDL_Renderer *renderer, SDL_Window *window, SimState *s
   // printf("x: %f\n", x);
   // printf("y: %f\n", y);
   float time = 0;
-  
-  while (y > 0 && dist <= getRange(v) && time < 5)
+  printf("shell position: (%f, %f)", x, y); 
+  while (y > 0 && dist <= getRangeB(v))
   {
+    float dt = 0.2f;
     // Update position
-    x += vx * time;
-    y += vy * time - 0.5f * G * pow(time, 2);
+    x += vx * dt;
+    y += vy * dt - 0.5f * G * pow(dt, 2);
     // check for collision
     if (checkCollisionEscortC(sim))
     {
@@ -647,19 +924,23 @@ void fireShellToEscortC (SDL_Renderer *renderer, SDL_Window *window, SimState *s
       SDL_DestroyTexture(sim->escortC.texE);
       break;
     }
-      sim->shellB.x = (int) x;
-      sim->shellB.y = (int) y;
+      sim->shellBEC.x = (int) x;
+      sim->shellBEC.y = (int) y;
+      printf("shell position: (%f, %f)", x, y); 
+      if (checkCollisionEscortC(sim))
+    {
+      sim->escortC.state = 0; // that means destroyed
       
+      printf("escortC destroyed!\n");
+      SDL_DestroyTexture(sim->escortC.texE);
+      break;
+    }
       // draw shell
-      drawBattleShell(renderer, window, sim);
+      drawBattleShellC(renderer, window, sim);
       if (time > getTimeToTarget(battleshipY, vy))
-      {
         break;
-      }
       else
-      {
-        time += 0.1f; // Adjust time
-      }
+        time += dt; // Adjust time
   }
 } 
 
@@ -701,8 +982,8 @@ void fireShellToEscortD (SDL_Renderer *renderer, SDL_Window *window, SimState *s
   double dist = sqrt(pow(dx, 2) + pow(dy, 2));
   // printf("distance: %lf\n", dist); // remove this after
   
-  double vx = v * dx / dist;
-  double vy = v * dy / dist;
+  double vx = fabs(dx) * v / dist;
+  double vy = fabs(dy) * v / dist;
   vx = fabs(vx);
   vy = fabs(vy);
   //printf("vx: %lf\n", vx);
@@ -713,12 +994,13 @@ void fireShellToEscortD (SDL_Renderer *renderer, SDL_Window *window, SimState *s
   // printf("x: %f\n", x);
   // printf("y: %f\n", y);
   float time = 0;
-  
-  while (y > 0 && dist <= getRange(v) && time < 5)
+  printf("shell position: (%f, %f)", x, y); 
+  while (y > 0 && dist <= getRangeB(v))
   {
+    float dt = 0.2f;
     // Update position
-    x += vx * time;
-    y += vy * time - 0.5f * G * pow(time, 2);
+    x += vx * dt;
+    y += vy * dt - 0.5f * G * pow(dt, 2);
     // check for collision
     if (checkCollisionEscortD(sim))
     {
@@ -728,18 +1010,26 @@ void fireShellToEscortD (SDL_Renderer *renderer, SDL_Window *window, SimState *s
       SDL_DestroyTexture(sim->escortD.texE);
       break;
     }
-      sim->shellB.x = (int) x;
-      sim->shellB.y = (int) y;
+      sim->shellBED.x = (int) x;
+      sim->shellBED.y = (int) y;
+      printf("shell position: (%f, %f)", x, y); 
+      if (checkCollisionEscortD(sim))
+    {
+      sim->escortD.state = 0; // that means destroyed 
       
+      printf("escortD destroyed!\n");
+      SDL_DestroyTexture(sim->escortD.texE);
+      break;
+    }
       // draw shell
-      drawBattleShell(renderer, window, sim);
+      drawBattleShellD(renderer, window, sim);
       if (time > getTimeToTarget(battleshipY, vy))
       {
         break;
       }
       else
       {
-        time += 0.1f; // Adjust time
+        time += dt; // Adjust time
       }
   }
 } 
@@ -782,8 +1072,8 @@ void fireShellToEscortE (SDL_Renderer *renderer, SDL_Window *window, SimState *s
   double dist = sqrt(pow(dx, 2) + pow(dy, 2));
   // printf("distance: %lf\n", dist); // remove this after
   
-  double vx = v * dx / dist;
-  double vy = v * dy / dist;
+  double vx = fabs(dx) * v / dist;
+  double vy = fabs(dy) * v / dist;
   vx = fabs(vx);
   vy = fabs(vy);
   //printf("vx: %lf\n", vx);
@@ -794,12 +1084,13 @@ void fireShellToEscortE (SDL_Renderer *renderer, SDL_Window *window, SimState *s
   // printf("x: %f\n", x);
   // printf("y: %f\n", y);
   float time = 0;
-  
-  while (y > 0 && dist <= getRange(v) && time < 5)
+  printf("shell position: (%f, %f)", x, y); 
+  while (y > 0 && dist <= getRangeB(v))
   {
+    float dt = 0.2f;
     // Update position
-    x += vx * time;
-    y += vy * time - 0.5f * G * pow(time, 2);
+    x += vx * dt;
+    y += vy * dt - 0.5f * G * pow(dt, 2);
     // check for collision
     if (checkCollisionEscortE(sim))
     {
@@ -808,20 +1099,22 @@ void fireShellToEscortE (SDL_Renderer *renderer, SDL_Window *window, SimState *s
       SDL_DestroyTexture(sim->escortE.texE);
       break;
     }
-      sim->shellB.x = (int) x;
-      sim->shellB.y = (int) y;
-      
+      sim->shellBEE.x = (int) x;
+      sim->shellBEE.y = (int) y;
+      printf("shell position: (%f, %f)", x, y); 
+      if (checkCollisionEscortE(sim))
+    {
+      sim->escortE.state = 0; // that means destroyed 
+      printf("escortE destroyed!\n");
+      SDL_DestroyTexture(sim->escortE.texE);
+      break;
+    }
       // draw shell
-      drawBattleShell(renderer, window, sim);
+      drawBattleShellE(renderer, window, sim);
       if (time > getTimeToTarget(battleshipY, vy))
-      {
         break;
-      }
       else
-      {
-        time += 0.1f; // Adjust time
-      }
-    
+        time += dt; // Adjust time
   }
 } 
 
@@ -898,6 +1191,7 @@ void doRender (SDL_Renderer* renderer, SimState* sim, int battleshipType) // TOD
 
 int main (void) 
 {
+  
   SimState simState;
   SDL_Window* window = NULL;
   SDL_Renderer* renderer = NULL;
@@ -950,7 +1244,11 @@ int main (void)
   SDL_DestroyTexture(simState.escortD.texE);
   SDL_DestroyTexture(simState.escortE.texE);
 
-  SDL_DestroyTexture(simState.shellB.texS);
+  SDL_DestroyTexture(simState.shellBEA.texS);
+  SDL_DestroyTexture(simState.shellBEB.texS);
+  SDL_DestroyTexture(simState.shellBEC.texS);
+  SDL_DestroyTexture(simState.shellBED.texS);
+  SDL_DestroyTexture(simState.shellBEE.texS);
   cleanup(window, renderer);
   return 0;
 }
