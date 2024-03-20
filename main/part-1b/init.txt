@@ -81,3 +81,33 @@ EscortshipD:
 Name: F-class Escort ships	 Position: (53, 118)	  Max angle: 0.872665	 Min angle: 0.000000	 Angle Range: 0.872665	 Velocity: 34.000000 
 EscortshipE: 
 Name: Japanese Kaibokan		 Position: (122, 13)	  Max angle: 1.518436	 Min angle: 0.296706	 Angle Range: 1.221730	 Velocity: 33.000000 
+
+---Initial Simulation Statistics---
+Battleship: 
+Type: 1	 Name: USS Iowa (BB-61)	 Velocity: 35.000000	 Angle: 0.785398	 Position: (50, 186) 
+Number of Escortships in battlefield: 5
+EscortshipA: 
+Name: 1936A-class Destroyer	 Position: (105, 114)	  Max angle: 0.610865	 Min angle: 0.261799	 Angle Range: 0.349066	 Velocity: 42.000000 
+EscortshipB: 
+Name: Gabbiano-class Corvette	 Position: (180, 55)	  Max angle: 0.767945	 Min angle: 0.244346	 Angle Range: 0.523599	 Velocity: 18.000000 
+EscortshipC: 
+Name: Matsu-class Destroyer	 Position: (183, 49)	  Max angle: 0.523599	 Min angle: 0.087266	 Angle Range: 0.436332	 Velocity: 9.000000 
+EscortshipD: 
+Name: F-class Escort ships	 Position: (47, 42)	  Max angle: 1.117011	 Min angle: 0.244346	 Angle Range: 0.872665	 Velocity: 31.000000 
+EscortshipE: 
+Name: Japanese Kaibokan		 Position: (50, 90)	  Max angle: 1.239184	 Min angle: 0.017453	 Angle Range: 1.221730	 Velocity: 33.000000 
+
+---Initial Simulation Statistics---
+Battleship: 
+Type: 2	 Name: MS King George V	 Velocity: 35.000000	 Angle: 0.785398	 Position: (50, 186) 
+Number of Escortships in battlefield: 5
+EscortshipA: 
+Name: 1936A-class Destroyer	 Position: (192, 139)	  Max angle: 0.436332	 Min angle: 0.087266	 Angle Range: 0.349066	 Velocity: 42.000000 
+EscortshipB: 
+Name: Gabbiano-class Corvette	 Position: (88, 49)	  Max angle: 0.837758	 Min angle: 0.314159	 Angle Range: 0.523599	 Velocity: 27.000000 
+EscortshipC: 
+Name: Matsu-class Destroyer	 Position: (213, 45)	  Max angle: 0.680678	 Min angle: 0.244346	 Angle Range: 0.436332	 Velocity: 32.000000 
+EscortshipD: 
+Name: F-class Escort ships	 Position: (47, 20)	  Max angle: 0.907571	 Min angle: 0.034907	 Angle Range: 0.872665	 Velocity: 1.000000 
+EscortshipE: 
+Name: Japanese Kaibokan		 Position: (152, 167)	  Max angle: 1.500983	 Min angle: 0.279253	 Angle Range: 1.221730	 Velocity: 5.000000 
