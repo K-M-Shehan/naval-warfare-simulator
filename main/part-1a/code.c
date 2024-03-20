@@ -15,18 +15,18 @@ const float G = 9.8f; // Gravitational acceleration
 
 typedef struct
 {
-  int x, y;         // position
-  short state;      // active or destroyed
-  int timeActive; // time spent in simulator
-  char* name;       // name of escort ship       
-  int id;           // unique id
-  SDL_Texture *texE;// texture of escort ship
-  float maxAngle;
-  float minAngle;
-  float angleR;
-  float v;
-  int type;       // type of escort A,B,C,D,E (denoted with numbers 1-5)
-  int battleshipStatus; 
+  int x, y;             // position
+  short state;          // active or destroyed
+  int timeActive;       // time spent in simulator
+  char* name;           // name of escort ship       
+  // int id;            // unique id - not implemented
+  SDL_Texture *texE;    // texture of escort ship
+  float maxAngle;       // randomly generated max angle
+  float minAngle;       // randomly generated min angle
+  float angleR;         // Angle Range (maxAngle - minAngle)
+  float v;              // MAX velocity (initial)
+  int type;             // type of escort A,B,C,D,E (denoted with numbers 1-5)
+  int battleshipStatus; // to check if escort has taken down the battleship
 } EscortShip;
 
 typedef struct
@@ -35,9 +35,9 @@ typedef struct
   float angle;      // max vertical angle of shell movement
   float v;          // max (initial velocity) of battle ship
   SDL_Texture *texB;// texture of battleship
-  char *name;
-  int timeActive;
-  short state;
+  char *name;       // name of the battleship
+  int timeActive;   // time spent in simulator
+  short state;      // active or destroyed
 } Battleship;
 
 typedef struct
@@ -46,7 +46,7 @@ typedef struct
   // Escorts
   EscortShip escortA, escortB, escortC, escortD, escortE;   // you could also use an array to draw these, but i'm an idiot so i did this
   // Battleships
-  Battleship battleU, battleM, battleR, battleS;  // all of these types would use the same sprite
+  Battleship battleU, battleM, battleR, battleS;            // all of these types would use the same sprite
 } SimState;
 
 void cleanup (SDL_Window* window, SDL_Renderer* renderer) // cleans window and renderer to prevent memory leaks
@@ -57,7 +57,7 @@ void cleanup (SDL_Window* window, SDL_Renderer* renderer) // cleans window and r
   SDL_Quit();
 }
 
-void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer, int battleshipType) // loads sprites of battlship and all escorts
+void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer, int battleshipType) // loads sprites of battlship and all escorts + info needed by all of them
 {  
   SDL_Surface *battleUSurface = NULL;
   SDL_Surface *battleMSurface = NULL;
@@ -288,11 +288,11 @@ void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer, int bat
   sim->battleS.angle = PI / 4;    // S
 
   // Angle range of escorts
-  sim->escortA.angleR = 20; // A
-  sim->escortB.angleR = 30; // B
-  sim->escortC.angleR = 25; // C
-  sim->escortD.angleR = 50; // D
-  sim->escortE.angleR = 70; // E
+  sim->escortA.angleR = 20 * (PI / 180); // A
+  sim->escortB.angleR = 30 * (PI / 180); // B
+  sim->escortC.angleR = 25 * (PI / 180); // C
+  sim->escortD.angleR = 50 * (PI / 180); // D
+  sim->escortE.angleR = 70 * (PI / 180); // E
   
   // Min angle of escorts PI / 9 = 20deg
   sim->escortA.minAngle = (rand() % 20) * (PI / 180);  // A 
@@ -373,35 +373,37 @@ void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer, int bat
     exit(1);
   }
   fprintf(initPtr, "\n---Initial Simulation Statistics---\n");
-  fprintf(initPtr, "Battleship: %d, %s, %f, %f, %d, %d \n", battleshipType, battleshipName, battleshipV, battleshipAngle, battleshipX, battleshipY);
-  fprintf(initPtr, "EscortshipA: 5, %s, %d, %d, %f, %f, %f, %f\n", sim->escortA.name, sim->escortA.x, sim->escortA.y, sim->escortA.maxAngle, sim->escortA.minAngle, sim->escortA.angleR, sim->escortA.v); 
-  fprintf(initPtr, "EscortshipB: 5, %s, %d, %d, %f, %f, %f, %f\n", sim->escortB.name, sim->escortB.x, sim->escortB.y, sim->escortB.maxAngle, sim->escortB.minAngle, sim->escortB.angleR, sim->escortB.v);
-  fprintf(initPtr, "EscortshipC: 5, %s, %d, %d, %f, %f, %f, %f\n", sim->escortC.name, sim->escortC.x, sim->escortC.y, sim->escortC.maxAngle, sim->escortC.minAngle, sim->escortC.angleR, sim->escortC.v);
-  fprintf(initPtr, "EscortshipD: 5, %s, %d, %d, %f, %f, %f, %f\n", sim->escortD.name, sim->escortD.x, sim->escortD.y, sim->escortD.maxAngle, sim->escortD.minAngle, sim->escortD.angleR, sim->escortD.v);
-  fprintf(initPtr, "EscortshipE: 5, %s, %d, %d, %f, %f, %f, %f\n", sim->escortE.name, sim->escortE.x, sim->escortE.y, sim->escortE.maxAngle, sim->escortE.minAngle, sim->escortE.angleR, sim->escortE.v);
+  fprintf(initPtr, "Battleship: \nType: %d\t Name: %s\t Velocity: %f\t Angle: %f\t Position: (%d, %d) \n", battleshipType, battleshipName, battleshipV, battleshipAngle, battleshipX, battleshipY);
+  fprintf(initPtr, "Number of Escortships in battlefield: 5\n");
+  fprintf(initPtr, "EscortshipA: \nName: %s\t Position: (%d, %d)\t  Max angle: %f\t Min angle: %f\t Angle Range: %f\t Velocity: %f \n", sim->escortA.name, sim->escortA.x, sim->escortA.y, sim->escortA.maxAngle, sim->escortA.minAngle, sim->escortA.angleR, sim->escortA.v); 
+  fprintf(initPtr, "EscortshipB: \nName: %s\t Position: (%d, %d)\t  Max angle: %f\t Min angle: %f\t Angle Range: %f\t Velocity: %f \n", sim->escortB.name, sim->escortB.x, sim->escortB.y, sim->escortB.maxAngle, sim->escortB.minAngle, sim->escortB.angleR, sim->escortB.v);
+  fprintf(initPtr, "EscortshipC: \nName: %s\t Position: (%d, %d)\t  Max angle: %f\t Min angle: %f\t Angle Range: %f\t Velocity: %f \n", sim->escortC.name, sim->escortC.x, sim->escortC.y, sim->escortC.maxAngle, sim->escortC.minAngle, sim->escortC.angleR, sim->escortC.v);
+  fprintf(initPtr, "EscortshipD: \nName: %s\t Position: (%d, %d)\t  Max angle: %f\t Min angle: %f\t Angle Range: %f\t Velocity: %f \n", sim->escortD.name, sim->escortD.x, sim->escortD.y, sim->escortD.maxAngle, sim->escortD.minAngle, sim->escortD.angleR, sim->escortD.v);
+  fprintf(initPtr, "EscortshipE: \nName: %s\t\t Position: (%d, %d)\t  Max angle: %f\t Min angle: %f\t Angle Range: %f\t Velocity: %f \n", sim->escortE.name, sim->escortE.x, sim->escortE.y, sim->escortE.maxAngle, sim->escortE.minAngle, sim->escortE.angleR, sim->escortE.v);
   
   fclose(initPtr);
 }
  
-float getRange (float v, float angle)
+float getRange (float v, float angle) // Gets the range of battleship 
 {
   // printf("return value of range: %f\n", (pow(v, 2) * sin(2 * angle)) / G);
   return (pow(v, 2) * sin(2 * angle)) / G;
 }
 
-float getTimeToTarget (float v) // this returns value in ms
+float getTimeToTarget (float v) // this returns time in ms
 {
   // printf("return value of time to tar: %f\n", 2 * vy / G);
   return (2 * (v / G)) * 1000;
 }
 
-float getRangeEscort(float v, float maxAngle, float minAngle) {
-    float maxRange = (pow(v, 2) * sin(2 * maxAngle)) / G;
-    float minRange = (pow(v, 2) * sin(2 * minAngle)) / G;
-    return fabs(maxRange - minRange); // Return absolute difference to ensure positive range
+float getRangeEscort(float v, float maxAngle, float minAngle) // returns range for escort ships
+{
+  float maxRange = (pow(v, 2) * sin(2 * maxAngle)) / G;
+  float minRange = (pow(v, 2) * sin(2 * minAngle)) / G;
+  return fabs(maxRange - minRange);
 }
 
-void impactB (SimState *sim, int escortType, int battleshipType, short *battleshipState) // include this in struct
+void impactB (SimState *sim, int escortType, int battleshipType, short *battleshipState) // destroys battleship
 {
   float escortshipX = 0;
   float escortshipY = 0;
@@ -488,7 +490,7 @@ void impactB (SimState *sim, int escortType, int battleshipType, short *battlesh
 
 
 // Pray to god that it works
-void impactEA (SimState *sim, int battleshipType)
+void impactEA (SimState *sim, int battleshipType) // destroys escort A
 {
   float battleshipX = 0;
   float battleshipY = 0;
@@ -539,7 +541,7 @@ void impactEA (SimState *sim, int battleshipType)
   }
 }
 
-void impactEB (SimState *sim, int battleshipType)
+void impactEB (SimState *sim, int battleshipType) // destroys escort B
 {
   float battleshipX = 0;
   float battleshipY = 0;
@@ -590,7 +592,7 @@ void impactEB (SimState *sim, int battleshipType)
   }
 }
 
-void impactEC (SimState *sim, int battleshipType)
+void impactEC (SimState *sim, int battleshipType) // destroys escort C
 {
   float battleshipX = 0;
   float battleshipY = 0;
@@ -641,7 +643,7 @@ void impactEC (SimState *sim, int battleshipType)
   }
 }
 
-void impactED (SimState *sim, int battleshipType)
+void impactED (SimState *sim, int battleshipType) // destroys escort D
 {
   float battleshipX = 0;
   float battleshipY = 0;
@@ -692,7 +694,7 @@ void impactED (SimState *sim, int battleshipType)
   }
 }
 
-void impactEE (SimState *sim, int battleshipType)
+void impactEE (SimState *sim, int battleshipType) // destroys escort E
 {
   float battleshipX = 0;
   float battleshipY = 0;
@@ -744,7 +746,7 @@ void impactEE (SimState *sim, int battleshipType)
 }
 
 
-int processEvents (SDL_Window* window, SimState *sim) // TODO: include structs in this to move around idk
+int processEvents (SDL_Window* window, SimState *sim) // to close window
 {
   SDL_Event event;
    int done = 0;
@@ -762,7 +764,7 @@ int processEvents (SDL_Window* window, SimState *sim) // TODO: include structs i
   return done;
 }
 
-void doRender (SDL_Renderer* renderer, SimState* sim, int battleshipType) // TODO:  include struct here as well to render the struct, when initializing rect in this use the positions of the struct to do it ma man
+void doRender (SDL_Renderer* renderer, SimState* sim, int battleshipType) // renders battlships and escorts
 {
   // set drawing color to blue
   SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
@@ -811,7 +813,7 @@ void doRender (SDL_Renderer* renderer, SimState* sim, int battleshipType) // TOD
   SDL_RenderPresent(renderer);
 }
 
-int checkBattleState(SimState *sim, short *battleshipState)
+int checkBattleState(SimState *sim, short *battleshipState) // checks if battleship is destroyed
 {
   if(battleshipState == 0)
   {
@@ -820,7 +822,7 @@ int checkBattleState(SimState *sim, short *battleshipState)
   return 1;
 }
 
-void playSimulation (int battleshipType)
+void playSimulation (int battleshipType)  // this is the simulation (does most of the work)
 {
   SimState simState;
   SDL_Window* window = NULL;
@@ -885,13 +887,13 @@ void playSimulation (int battleshipType)
     
     if (simState.escortA.state == 1)
     {
-      impactB(&simState, simState.escortA.type, battleshipType, battleshipState); // TODO: add function to check if battleship is sunk, if it is, save the info of the escort that did it
+      impactB(&simState, simState.escortA.type, battleshipType, battleshipState); 
       simState.escortA.battleshipStatus = checkBattleState(&simState, battleshipState);
     }
 
     if (simState.escortB.state == 1)
     {
-      impactB(&simState, simState.escortB.type, battleshipType, battleshipState); // function must be added under each impact B to make sure 
+      impactB(&simState, simState.escortB.type, battleshipType, battleshipState);
       simState.escortB.battleshipStatus = checkBattleState(&simState, battleshipState);
     }
 
@@ -918,9 +920,9 @@ void playSimulation (int battleshipType)
   endSimTime = time(NULL);
 
   totalSimTime = difftime(endSimTime, startSimTime) - 3000;
-  // due to the program not working properly when the delay is incoporated this part had to be added
+  // due to the program not working properly when the delay is incomporated, i added a line 5 lines above this (done = 1) to exit the loop
 
-  //printf("BS state: %hs", *battleshipState);// test
+  //printf("BS state: %hi\n", *battleshipState); // for dev use uncomment this and check if battleship is truly destroyed
 
   // Open file battlefield.txt
   FILE *battlefieldPtr;
@@ -1037,10 +1039,6 @@ void playSimulation (int battleshipType)
 
   }
   fclose(battlefieldPtr);
-  // TODO: add function to check if battleship is destroyed if so run TODO 1 else run TODO 2
-  // TODO1: add a function that would check if escort ship is destroyed, if it is get values from previous func in line 781 save final conditions of battlefield in file
-  // final conditions are: positions of remaining escorts if available, remaining escorts with type. time taken so far
-  // TODO2: save number of ships sunk by battleship, how long it took to end, time to hit each escort that was hit. positions of remaining escorts.
 
   // Free memory
   SDL_DestroyTexture(simState.battleU.texB);
@@ -1057,7 +1055,8 @@ void playSimulation (int battleshipType)
   cleanup(window, renderer);
 }
 
-int setup() {
+int setup() // part of the main menu
+{
     int setupChoice;
     int battleshipType;
 
@@ -1104,7 +1103,7 @@ int setup() {
   return battleshipType;
 }
 
-void startSimulation() 
+void startSimulation() // part of main menu
 {
   int subChoice;
   int battleshipType;
@@ -1137,20 +1136,25 @@ void startSimulation()
   } while (subChoice != 3);
 }
 
-void viewInstructions() {
+void viewInstructions() // part of main menu
+{
   printf("\nInstructions:\n");
   printf("To start the simulation, first you must select a battleship type to be deloyed\n");
-  printf("To exit from the simulation window, just close the window, afterwards you will be directed back to the menu\n");
+  printf("You will be able to see what escort ships are destroyed and if battleship is destroyed through the terminal\n");
+  printf("For more info open the battlefield.txt file in the same directory as the program\n");
+  printf("To exit from the simulation window, wait for a few seconds and it will close automatically once simulation is complete, afterwards you will be directed back to the menu\n");
   printf("To view Initial statistics you can open the init.txt file\n");
 }
 
-void simulationStats() {
+void simulationStats() // part of main menu
+{
   printf("\nSimulation Stats:\n");
   printf("To see old simulation statistics you can open the battlefield.txt\n");
+  printf("This file can be found in the same directory as the program\n");
   printf("Battlefield.txt has records of all the past simulations done with the simulator\n");
 }
 
-void mainMenu() 
+void mainMenu() // main menu
 {
   int choice;
 
