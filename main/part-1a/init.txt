@@ -14,3 +14,19 @@ EscortshipB: 5, Gabbiano-class Corvette, 61, 212, 30.157080, 0.157080, 30.000000
 EscortshipC: 5, Matsu-class Destroyer, 199, 131, 25.052361, 0.052360, 25.000000, 12.000000
 EscortshipD: 5, F-class Escort ships, 157, 63, 50.157078, 0.157080, 50.000000, 16.000000
 EscortshipE: 5, Japanese Kaibokan, 193, 178, 70.069817, 0.069813, 70.000000, 28.000000
+
+---Initial Simulation Statistics---
+Battleship: 1, USS Iowa (BB-61), 35.000000, 0.785398, 50, 186 
+EscortshipA: 5, 1936A-class Destroyer, 43, 137, 20.000000, 0.000000, 20.000000, 42.000000
+EscortshipB: 5, Gabbiano-class Corvette, 43, 39, 30.000000, 0.000000, 30.000000, 13.000000
+EscortshipC: 5, Matsu-class Destroyer, 134, 77, 25.331612, 0.331613, 25.000000, 32.000000
+EscortshipD: 5, F-class Escort ships, 54, 141, 50.104721, 0.104720, 50.000000, 34.000000
+EscortshipE: 5, Japanese Kaibokan, 99, 11, 70.209442, 0.209440, 70.000000, 29.000000
+
+---Initial Simulation Statistics---
+Battleship: 1, USS Iowa (BB-61), 35.000000, 0.785398, 50, 186 
+EscortshipA: 5, 1936A-class Destroyer, 173, 207, 20.122173, 0.122173, 20.000000, 42.000000
+EscortshipB: 5, Gabbiano-class Corvette, 220, 85, 30.244347, 0.244346, 30.000000, 24.000000
+EscortshipC: 5, Matsu-class Destroyer, 200, 124, 25.139626, 0.139626, 25.000000, 33.000000
+EscortshipD: 5, F-class Escort ships, 196, 57, 50.261799, 0.261799, 50.000000, 24.000000
+EscortshipE: 5, Japanese Kaibokan, 133, 111, 70.052361, 0.052360, 70.000000, 2.000000
