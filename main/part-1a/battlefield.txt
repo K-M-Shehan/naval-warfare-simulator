@@ -1,0 +1,9 @@
+
+---BATTLE FIELD RESULT---
+Battleship has sunk
+1936A-class Destroyer, has destroyed the battleship
+1936A-class Destroyer, has been destroyed at (173, 207)
+Gabbiano-class Corvette, has not been destroyed at (220, 85)
+Matsu-class Destroyer, has not been destroyed at (200, 124)
+F-class Escort ships, has not been destroyed at (196, 57)
+Japanese Kaibokan, has been destroyed at (133, 111)
