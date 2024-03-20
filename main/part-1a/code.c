@@ -26,6 +26,7 @@ typedef struct
   float angleR;
   float v;
   int type;       // type of escort A,B,C,D,E (denoted with numbers 1-5)
+  int battleshipStatus; 
 } EscortShip;
 
 typedef struct
@@ -378,10 +379,10 @@ void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer, int bat
   fprintf(initPtr, "EscortshipC: 5, %s, %d, %d, %f, %f, %f, %f\n", sim->escortC.name, sim->escortC.x, sim->escortC.y, sim->escortC.maxAngle, sim->escortC.minAngle, sim->escortC.angleR, sim->escortC.v);
   fprintf(initPtr, "EscortshipD: 5, %s, %d, %d, %f, %f, %f, %f\n", sim->escortD.name, sim->escortD.x, sim->escortD.y, sim->escortD.maxAngle, sim->escortD.minAngle, sim->escortD.angleR, sim->escortD.v);
   fprintf(initPtr, "EscortshipE: 5, %s, %d, %d, %f, %f, %f, %f\n", sim->escortE.name, sim->escortE.x, sim->escortE.y, sim->escortE.maxAngle, sim->escortE.minAngle, sim->escortE.angleR, sim->escortE.v);
-
+  
+  fclose(initPtr);
 }
  
-
 float getRange (float v, float angle)
 {
   // printf("return value of range: %f\n", (pow(v, 2) * sin(2 * angle)) / G);
@@ -787,6 +788,14 @@ void doRender (SDL_Renderer* renderer, SimState* sim, int battleshipType) // TOD
   SDL_RenderPresent(renderer);
 }
 
+int checkBattleState(SimState *sim, short *battleshipState)
+{
+  if(battleshipState == 0)
+  {
+    return 0; // this will be saved in struct of escort
+  }
+  return 1;
+}
 
 void playSimulation (int battleshipType)
 {
@@ -844,13 +853,141 @@ void playSimulation (int battleshipType)
     impactEC(&simState, battleshipType);
     impactED(&simState, battleshipType);
     impactEE(&simState, battleshipType);
-    impactB(&simState, simState.escortA.type, battleshipType, battleshipState); // TODO: add function to check if battleship is sunk, if it is, save the info of the escort that did it
-    impactB(&simState, simState.escortB.type, battleshipType, battleshipState); // function must be added under each impact B to make sure
-    impactB(&simState, simState.escortC.type, battleshipType, battleshipState);
-    impactB(&simState, simState.escortD.type, battleshipType, battleshipState);
-    impactB(&simState, simState.escortE.type, battleshipType, battleshipState);
+    
+    if (simState.escortA.state == 1)
+    {
+      impactB(&simState, simState.escortA.type, battleshipType, battleshipState); // TODO: add function to check if battleship is sunk, if it is, save the info of the escort that did it
+      simState.escortA.battleshipStatus = checkBattleState(&simState, battleshipState);
+    }
+
+    if (simState.escortB.state == 1)
+    {
+      impactB(&simState, simState.escortB.type, battleshipType, battleshipState); // function must be added under each impact B to make sure 
+      simState.escortB.battleshipStatus = checkBattleState(&simState, battleshipState);
+    }
+
+    if (simState.escortC.state == 1)
+    {
+      impactB(&simState, simState.escortC.type, battleshipType, battleshipState);
+      simState.escortC.battleshipStatus = checkBattleState(&simState, battleshipState);
+    }
+
+    if (simState.escortD.state == 1)
+    {
+      impactB(&simState, simState.escortD.type, battleshipType, battleshipState);
+      simState.escortD.battleshipStatus = checkBattleState(&simState, battleshipState);
+    }
+
+    if (simState.escortE.state == 1)
+    {
+      impactB(&simState, simState.escortE.type, battleshipType, battleshipState); 
+      simState.escortE.battleshipStatus = checkBattleState(&simState, battleshipState);
+    }
   }
 
+
+  //printf("BS state: %hs", *battleshipState);// test
+
+  // Open file battlefield.txt
+  FILE *battlefieldPtr;
+  battlefieldPtr = fopen("battlefield.txt", "a");
+  if (battlefieldPtr == NULL)
+  {
+    printf("File cannot be created\n");
+    exit(1);
+  }
+
+  fprintf(battlefieldPtr, "\n---BATTLE FIELD RESULT---\n");
+  
+  // Check if battleship was destroyed
+  if (*battleshipState == 0)
+  {
+    fprintf(battlefieldPtr, "Battleship has sunk\n");
+
+    // Check which escort has taken down the battleship
+    if (simState.escortA.battleshipStatus == 0)
+    {
+      fprintf(battlefieldPtr, "%s, has destroyed the battleship\n", simState.escortA.name);      
+    }
+    if (simState.escortB.battleshipStatus == 0)
+    {
+      fprintf(battlefieldPtr, "%s, has destroyed the battleship\n", simState.escortB.name);      
+    }
+    if (simState.escortC.battleshipStatus == 0)
+    {
+      fprintf(battlefieldPtr, "%s, has destroyed the battleship\n", simState.escortC.name);      
+    }
+    if (simState.escortD.battleshipStatus == 0)
+    {
+      fprintf(battlefieldPtr, "%s, has destroyed the battleship\n", simState.escortD.name);      
+    }
+    if (simState.escortE.battleshipStatus == 0)
+    {
+      fprintf(battlefieldPtr, "%s, has destroyed the battleship\n", simState.escortE.name);      
+    }
+
+
+    // Check if escort ships have been destroyed
+    if (simState.escortA.state == 0)
+      fprintf(battlefieldPtr, "%s, has been destroyed at (%d, %d)\n", simState.escortA.name, simState.escortA.x, simState.escortA.y);
+    else 
+      fprintf(battlefieldPtr, "%s, has not been destroyed at (%d, %d)\n", simState.escortA.name, simState.escortA.x, simState.escortA.y);
+    
+    if (simState.escortB.state == 0)
+      fprintf(battlefieldPtr, "%s, has been destroyed at (%d, %d)\n", simState.escortB.name, simState.escortB.x, simState.escortB.y);
+    else
+      fprintf(battlefieldPtr, "%s, has not been destroyed at (%d, %d)\n", simState.escortB.name, simState.escortB.x, simState.escortB.y);
+
+    if (simState.escortC.state == 0)
+      fprintf(battlefieldPtr, "%s, has been destroyed at (%d, %d)\n", simState.escortC.name, simState.escortC.x, simState.escortC.y);
+    else
+      fprintf(battlefieldPtr, "%s, has not been destroyed at (%d, %d)\n", simState.escortC.name, simState.escortC.x, simState.escortC.y);
+
+    if (simState.escortD.state == 0)
+      fprintf(battlefieldPtr, "%s, has been destroyed at (%d, %d)\n", simState.escortD.name, simState.escortD.x, simState.escortD.y);
+    else
+      fprintf(battlefieldPtr, "%s, has not been destroyed at (%d, %d)\n", simState.escortD.name, simState.escortD.x, simState.escortD.y);
+
+    if (simState.escortE.state == 0)
+      fprintf(battlefieldPtr, "%s, has been destroyed at (%d, %d)\n", simState.escortE.name, simState.escortE.x, simState.escortE.y);
+    else
+      fprintf(battlefieldPtr, "%s, has not been destroyed at (%d, %d)\n", simState.escortE.name, simState.escortE.x, simState.escortE.y);
+
+
+  }
+  else
+  {
+    fprintf(battlefieldPtr, "Battleship has not been destroyed\n");
+
+
+    // Check if escort ships have been destroyed
+    if (simState.escortA.state == 0)
+      fprintf(battlefieldPtr, "%s, has been destroyed at (%d, %d)\n", simState.escortA.name, simState.escortA.x, simState.escortA.y);
+    else 
+      fprintf(battlefieldPtr, "%s, has not been destroyed at (%d, %d)\n", simState.escortA.name, simState.escortA.x, simState.escortA.y);
+    
+    if (simState.escortB.state == 0)
+      fprintf(battlefieldPtr, "%s, has been destroyed at (%d, %d)\n", simState.escortB.name, simState.escortB.x, simState.escortB.y);
+    else
+      fprintf(battlefieldPtr, "%s, has not been destroyed at (%d, %d)\n", simState.escortB.name, simState.escortB.x, simState.escortB.y);
+
+    if (simState.escortC.state == 0)
+      fprintf(battlefieldPtr, "%s, has been destroyed at (%d, %d)\n", simState.escortC.name, simState.escortC.x, simState.escortC.y);
+    else
+      fprintf(battlefieldPtr, "%s, has not been destroyed at (%d, %d)\n", simState.escortC.name, simState.escortC.x, simState.escortC.y);
+
+    if (simState.escortD.state == 0)
+      fprintf(battlefieldPtr, "%s, has been destroyed at (%d, %d)\n", simState.escortD.name, simState.escortD.x, simState.escortD.y);
+    else
+      fprintf(battlefieldPtr, "%s, has not been destroyed at (%d, %d)\n", simState.escortD.name, simState.escortD.x, simState.escortD.y);
+
+    if (simState.escortE.state == 0)
+      fprintf(battlefieldPtr, "%s, has been destroyed at (%d, %d)\n", simState.escortE.name, simState.escortE.x, simState.escortE.y);
+    else
+      fprintf(battlefieldPtr, "%s, has not been destroyed at (%d, %d)\n", simState.escortE.name, simState.escortE.x, simState.escortE.y);
+
+  }
+  fclose(battlefieldPtr);
   // TODO: add function to check if battleship is destroyed if so run TODO 1 else run TODO 2
   // TODO1: add a function that would check if escort ship is destroyed, if it is get values from previous func in line 781 save final conditions of battlefield in file
   // final conditions are: positions of remaining escorts if available, remaining escorts with type. time taken so far
