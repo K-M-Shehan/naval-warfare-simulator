@@ -56,7 +56,7 @@ void cleanup (SDL_Window* window, SDL_Renderer* renderer) // cleans window and r
   SDL_Quit();
 }
 
-void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer) // loads sprites of battlship and all escorts
+void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer, int battleshipType) // loads sprites of battlship and all escorts
 {  
   SDL_Surface *battleUSurface = NULL;
   SDL_Surface *battleMSurface = NULL;
@@ -313,6 +313,72 @@ void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer) // load
   sim->escortC.type = 3; // C
   sim->escortD.type = 4; // D
   sim->escortE.type = 5; // E
+  
+  // Names of Battleships
+  sim->battleU.name = "USS Iowa (BB-61)";     // U
+  sim->battleM.name = "MS King George V";     // M
+  sim->battleR.name = "Richelieu";            // R
+  sim->battleS.name = "Sovetsky Soyuz-class"; // S
+
+  // Names of Escorts
+  sim->escortA.name = "1936A-class Destroyer";    // A
+  sim->escortB.name = "Gabbiano-class Corvette";  // B
+  sim->escortC.name = "Matsu-class Destroyer";    // C
+  sim->escortD.name = "F-class Escort ships";     // D
+  sim->escortE.name = "Japanese Kaibokan";        // E
+
+  // Get which battleship is being used in the sim
+  int battleshipX, battleshipY;
+  float battleshipAngle, battleshipV;
+  char *battleshipName;
+  switch (battleshipType)
+  {
+    case 1:
+      battleshipX = sim->battleU.x;
+      battleshipY = sim->battleU.y;
+      battleshipAngle = sim->battleU.angle;
+      battleshipV = sim->battleU.v;
+      battleshipName = sim->battleU.name;
+    break;
+    case 2:
+      battleshipX = sim->battleM.x;
+      battleshipY = sim->battleM.y;
+      battleshipAngle = sim->battleM.angle;
+      battleshipV = sim->battleM.v;
+      battleshipName = sim->battleM.name;
+    break;
+    case 3:
+      battleshipX = sim->battleR.x;
+      battleshipY = sim->battleR.y;
+      battleshipAngle = sim->battleR.angle;
+      battleshipV = sim->battleR.v;
+      battleshipName = sim->battleR.name;
+    break;
+    case 4:
+      battleshipX = sim->battleS.x;
+      battleshipY = sim->battleS.y;
+      battleshipAngle = sim->battleS.angle;
+      battleshipV = sim->battleS.v;
+      battleshipName = sim->battleS.name;
+    break;
+  }
+
+  // INIT FILE 
+  FILE *initPtr;
+  initPtr = fopen("init.txt", "a");
+  if (initPtr == NULL)
+  {
+    printf("File cannot be created\n");
+    exit(1);
+  }
+  fprintf(initPtr, "\n---Initial Simulation Statistics---\n");
+  fprintf(initPtr, "Battleship: %d, %s, %f, %f, %d, %d \n", battleshipType, battleshipName, battleshipV, battleshipAngle, battleshipX, battleshipY);
+  fprintf(initPtr, "EscortshipA: 5, %s, %d, %d, %f, %f, %f, %f\n", sim->escortA.name, sim->escortA.x, sim->escortA.y, sim->escortA.maxAngle, sim->escortA.minAngle, sim->escortA.angleR, sim->escortA.v); 
+  fprintf(initPtr, "EscortshipB: 5, %s, %d, %d, %f, %f, %f, %f\n", sim->escortB.name, sim->escortB.x, sim->escortB.y, sim->escortB.maxAngle, sim->escortB.minAngle, sim->escortB.angleR, sim->escortB.v);
+  fprintf(initPtr, "EscortshipC: 5, %s, %d, %d, %f, %f, %f, %f\n", sim->escortC.name, sim->escortC.x, sim->escortC.y, sim->escortC.maxAngle, sim->escortC.minAngle, sim->escortC.angleR, sim->escortC.v);
+  fprintf(initPtr, "EscortshipD: 5, %s, %d, %d, %f, %f, %f, %f\n", sim->escortD.name, sim->escortD.x, sim->escortD.y, sim->escortD.maxAngle, sim->escortD.minAngle, sim->escortD.angleR, sim->escortD.v);
+  fprintf(initPtr, "EscortshipE: 5, %s, %d, %d, %f, %f, %f, %f\n", sim->escortE.name, sim->escortE.x, sim->escortE.y, sim->escortE.maxAngle, sim->escortE.minAngle, sim->escortE.angleR, sim->escortE.v);
+
 }
  
 
@@ -401,7 +467,7 @@ void impactB (SimState *sim, int escortType, int battleshipType, short *battlesh
     case 4:
       target_x = sim->battleS.x - 32;
       target_y = sim->battleS.y - 32;
-      battleshipTex = sim->battleR.texB;
+      battleshipTex = sim->battleS.texB;
     break;
   }
   double dx = target_x - escortshipX;
@@ -746,7 +812,7 @@ void playSimulation (int battleshipType)
   // Creating a renderer for the window
   renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC); 
    
-  loadSim(&simState, window, renderer);
+  loadSim(&simState, window, renderer, battleshipType); // battleshipType to append inital info into file
 
   short *battleshipState;
   switch(battleshipType)
@@ -778,12 +844,18 @@ void playSimulation (int battleshipType)
     impactEC(&simState, battleshipType);
     impactED(&simState, battleshipType);
     impactEE(&simState, battleshipType);
-    impactB(&simState, simState.escortA.type, battleshipType, battleshipState);
-    impactB(&simState, simState.escortB.type, battleshipType, battleshipState);
+    impactB(&simState, simState.escortA.type, battleshipType, battleshipState); // TODO: add function to check if battleship is sunk, if it is, save the info of the escort that did it
+    impactB(&simState, simState.escortB.type, battleshipType, battleshipState); // function must be added under each impact B to make sure
     impactB(&simState, simState.escortC.type, battleshipType, battleshipState);
     impactB(&simState, simState.escortD.type, battleshipType, battleshipState);
     impactB(&simState, simState.escortE.type, battleshipType, battleshipState);
   }
+
+  // TODO: add function to check if battleship is destroyed if so run TODO 1 else run TODO 2
+  // TODO1: add a function that would check if escort ship is destroyed, if it is get values from previous func in line 781 save final conditions of battlefield in file
+  // final conditions are: positions of remaining escorts if available, remaining escorts with type. time taken so far
+  // TODO2: save number of ships sunk by battleship, how long it took to end, time to hit each escort that was hit. positions of remaining escorts.
+
   // Free memory
   SDL_DestroyTexture(simState.battleU.texB);
   SDL_DestroyTexture(simState.battleM.texB);
@@ -831,7 +903,10 @@ int setup() {
                 }
                 break;
             case 2:
-                printf("Escortship settings...\n");
+                printf("\nEscortship settings...\n");
+                printf("Number of Escortships in battlefield: 5\n");
+                printf("Positions,Max velocity and Angles will be randomly generated upon start of simulation\n");
+                printf("This data can be viewed in the data file, init.txt\n");
                 break;
             case 3:
                 printf("Returning to start simulation menu...\n");
@@ -878,12 +953,15 @@ void startSimulation()
 
 void viewInstructions() {
   printf("\nInstructions:\n");
-  // Print instructions here
+  printf("To start the simulation, first you must select a battleship type to be deloyed\n");
+  printf("To exit from the simulation window, just close the window, afterwards you will be directed back to the menu\n");
+  printf("To view Initial statistics you can open the init.txt file\n");
 }
 
 void simulationStats() {
   printf("\nSimulation Stats:\n");
-  // Print simulation statistics here
+  printf("To see old simulation statistics you can open the battlefield.txt\n");
+  printf("Battlefield.txt has records of all the past simulations done with the simulator\n");
 }
 
 void mainMenu() 
