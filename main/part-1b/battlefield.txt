@@ -54,11 +54,9 @@ Japanese Kaibokan, has not been destroyed at (200, 159)
 
 ---BATTLE FIELD SIMULATION 1  RESULT---
 Battleship has sunk
-1936A-class Destroyer, has destroyed the battleship
-Gabbiano-class Corvette, has destroyed the battleship
-1936A-class Destroyer, has been destroyed at (70, 205)
-Gabbiano-class Corvette, has been destroyed at (149, 146)
-Matsu-class Destroyer, has been destroyed at (159, 183)
-F-class Escort ships, has been destroyed at (53, 118)
-Japanese Kaibokan, has not been destroyed at (122, 13)
+1936A-class Destroyer, has not been destroyed at (192, 139)
+Gabbiano-class Corvette, has not been destroyed at (88, 49)
+Matsu-class Destroyer, has not been destroyed at (213, 45)
+F-class Escort ships, has not been destroyed at (47, 20)
+Japanese Kaibokan, has been destroyed at (152, 167)
 ---SIMULATION 2 WAS NOT COMMENCED DUE TO BATTLESHIP BEING DESTROYED---
