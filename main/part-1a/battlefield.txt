@@ -7,3 +7,29 @@ Gabbiano-class Corvette, has not been destroyed at (220, 85)
 Matsu-class Destroyer, has not been destroyed at (200, 124)
 F-class Escort ships, has not been destroyed at (196, 57)
 Japanese Kaibokan, has been destroyed at (133, 111)
+
+---BATTLE FIELD RESULT---
+Battleship has sunk
+1936A-class Destroyer, has been destroyed at (189, 185)
+Gabbiano-class Corvette, has not been destroyed at (113, 71)
+Matsu-class Destroyer, has not been destroyed at (218, 122)
+F-class Escort ships, has been destroyed at (0, 147)
+Japanese Kaibokan, has not been destroyed at (141, 30)
+
+---BATTLE FIELD RESULT---
+Battleship has sunk
+1936A-class Destroyer, has destroyed the battleship
+1936A-class Destroyer, has been destroyed at (131, 106)
+Gabbiano-class Corvette, has been destroyed at (94, 232)
+Matsu-class Destroyer, has been destroyed at (110, 188)
+F-class Escort ships, has been destroyed at (159, 178)
+Japanese Kaibokan, has not been destroyed at (171, 32)
+
+---BATTLE FIELD RESULT---
+Battleship has sunk
+1936A-class Destroyer, has destroyed the battleship
+1936A-class Destroyer, has been destroyed at (111, 204)
+Gabbiano-class Corvette, has not been destroyed at (176, 41)
+Matsu-class Destroyer, has been destroyed at (81, 188)
+F-class Escort ships, has not been destroyed at (232, 217)
+Japanese Kaibokan, has not been destroyed at (216, 121)
