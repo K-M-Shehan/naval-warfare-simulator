@@ -287,6 +287,12 @@ void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer, int bat
   sim->battleM.angle = PI / 4;    // M
   sim->battleR.angle = PI / 4;    // R
   sim->battleS.angle = PI / 4;    // S
+  
+  // Min angle of battleships
+  sim->battleU.minAngle = 0;    // U
+  sim->battleM.minAngle = 0;    // M
+  sim->battleR.minAngle = 0;    // R
+  sim->battleS.minAngle = 0;    // S
 
   // Angle range of escorts
   sim->escortA.angleR = 20 * (PI / 180); // A
@@ -385,19 +391,13 @@ void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer, int bat
   fclose(initPtr);
 }
  
-float getRange (float v, float angle) // Gets the range of battleship 
-{
-  // printf("return value of range: %f\n", (pow(v, 2) * sin(2 * angle)) / G);
-  return (pow(v, 2) * sin(2 * angle)) / G;
-}
-
 float getTimeToTarget (float v) // this returns time in ms
 {
   // printf("return value of time to tar: %f\n", 2 * vy / G);
   return (2 * (v / G)) * 1000;
 }
 
-float getRangeEscort(float v, float maxAngle, float minAngle) // returns range for escort ships
+float getRange (float v, float maxAngle, float minAngle) // returns range for escort ships
 {
   float maxRange = (pow(v, 2) * sin(2 * maxAngle)) / G;
   float minRange = (pow(v, 2) * sin(2 * minAngle)) / G;
@@ -478,7 +478,7 @@ void impactB (SimState *sim, int escortType, int battleshipType, short *battlesh
   double dx = target_x - escortshipX;
   double dy = target_y - escortshipY;
   double distance = sqrt(pow(dx, 2) + pow(dy, 2));
-  if (distance > getRangeEscort(v, maxAngle, minAngle))
+  if (distance > getRange(v, maxAngle, minAngle))
   {
     *battleshipState = 0;
     time = getTimeToTarget(v);
@@ -495,7 +495,7 @@ void impactEA (SimState *sim, int battleshipType) // destroys escort A
 {
   float battleshipX = 0;
   float battleshipY = 0;
-  float v, angle;
+  float v, angle, minAngle;
   int timeBA;
   switch(battleshipType)
   {
@@ -504,24 +504,28 @@ void impactEA (SimState *sim, int battleshipType) // destroys escort A
       battleshipY = sim->battleU.y;
       v = sim->battleU.v;
       angle = sim->battleU.angle;
+      minAngle = sim->battleU.minAngle;
     break;
     case 2:
       battleshipX = sim->battleM.x; 
       battleshipY = sim->battleM.y;
       v = sim->battleM.v;
       angle = sim->battleM.angle;
+      minAngle = sim->battleM.minAngle;
     break;
     case 3:
       battleshipX = sim->battleR.x;
       battleshipY = sim->battleR.y;
       v = sim->battleR.v;
       angle = sim->battleR.angle;
+      minAngle = sim->battleR.minAngle;
     break;
     case 4:
       battleshipX = sim->battleS.x;
       battleshipY = sim->battleS.y;
       v = sim->battleS.v;
       angle = sim->battleS.angle;
+      minAngle = sim->battleS.minAngle;
     break;
   }
 
@@ -531,7 +535,7 @@ void impactEA (SimState *sim, int battleshipType) // destroys escort A
   double dx = target_x - battleshipX;
   double dy = target_y - battleshipY;
   double distance = sqrt(pow(dx, 2) + pow(dy, 2));
-  if (distance < getRange(v, angle))
+  if (distance < getRange(v, angle, minAngle))
   {
     sim->escortA.state = 0; // that means destroyed
     timeBA = getTimeToTarget(v);
@@ -546,7 +550,7 @@ void impactEB (SimState *sim, int battleshipType) // destroys escort B
 {
   float battleshipX = 0;
   float battleshipY = 0;
-  float v, angle;
+  float v, angle, minAngle;
   int timeBB;
   switch(battleshipType)
   {
@@ -555,24 +559,28 @@ void impactEB (SimState *sim, int battleshipType) // destroys escort B
       battleshipY = sim->battleU.y;
       v = sim->battleU.v;
       angle = sim->battleU.angle;
+      minAngle = sim->battleU.minAngle;
     break;
     case 2:
       battleshipX = sim->battleM.x; 
       battleshipY = sim->battleM.y;
       v = sim->battleM.v;
       angle = sim->battleM.angle;
+      minAngle = sim->battleM.minAngle;
     break;
     case 3:
       battleshipX = sim->battleR.x;
       battleshipY = sim->battleR.y;
       v = sim->battleR.v;
       angle = sim->battleR.angle;
+      minAngle = sim->battleR.minAngle;
     break;
     case 4:
       battleshipX = sim->battleS.x;
       battleshipY = sim->battleS.y;
       v = sim->battleS.v;
       angle = sim->battleS.angle;
+      minAngle = sim->battleS.minAngle;
     break;
   }
 
@@ -582,7 +590,7 @@ void impactEB (SimState *sim, int battleshipType) // destroys escort B
   double dx = target_x - battleshipX;
   double dy = target_y - battleshipY;
   double distance = sqrt(pow(dx, 2) + pow(dy, 2));
-  if (distance < getRange(v, angle))
+  if (distance < getRange(v, angle, minAngle))
   {
     sim->escortB.state = 0; // that means destroyed
     timeBB = getTimeToTarget(v);
@@ -597,7 +605,7 @@ void impactEC (SimState *sim, int battleshipType) // destroys escort C
 {
   float battleshipX = 0;
   float battleshipY = 0;
-  float v, angle;
+  float v, angle, minAngle;
   int timeBC;
   switch(battleshipType)
   {
@@ -606,24 +614,28 @@ void impactEC (SimState *sim, int battleshipType) // destroys escort C
       battleshipY = sim->battleU.y;
       v = sim->battleU.v;
       angle = sim->battleU.angle;
+      minAngle = sim->battleU.minAngle;
     break;
     case 2:
       battleshipX = sim->battleM.x; 
       battleshipY = sim->battleM.y;
       v = sim->battleM.v;
       angle = sim->battleM.angle;
+      minAngle = sim->battleM.minAngle;
     break;
     case 3:
       battleshipX = sim->battleR.x;
       battleshipY = sim->battleR.y;
       v = sim->battleR.v;
       angle = sim->battleR.angle;
+      minAngle = sim->battleR.minAngle;
     break;
     case 4:
       battleshipX = sim->battleS.x;
       battleshipY = sim->battleS.y;
       v = sim->battleS.v;
       angle = sim->battleS.angle;
+      minAngle = sim->battleS.minAngle;
     break;
   }
 
@@ -633,7 +645,7 @@ void impactEC (SimState *sim, int battleshipType) // destroys escort C
   double dx = target_x - battleshipX;
   double dy = target_y - battleshipY;
   double distance = sqrt(pow(dx, 2) + pow(dy, 2));
-  if (distance < getRange(v, angle))
+  if (distance < getRange(v, angle, minAngle))
   {
     sim->escortC.state = 0; // that means destroyed
     timeBC = getTimeToTarget(v);
@@ -648,7 +660,7 @@ void impactED (SimState *sim, int battleshipType) // destroys escort D
 {
   float battleshipX = 0;
   float battleshipY = 0;
-  float v, angle;
+  float v, angle, minAngle;
   int timeBD;
   switch(battleshipType)
   {
@@ -657,24 +669,28 @@ void impactED (SimState *sim, int battleshipType) // destroys escort D
       battleshipY = sim->battleU.y;
       v = sim->battleU.v;
       angle = sim->battleU.angle;
+      minAngle = sim->battleU.minAngle;
     break;
     case 2:
       battleshipX = sim->battleM.x; 
       battleshipY = sim->battleM.y;
       v = sim->battleM.v;
       angle = sim->battleM.angle;
+      minAngle = sim->battleM.minAngle;
     break;
     case 3:
       battleshipX = sim->battleR.x;
       battleshipY = sim->battleR.y;
       v = sim->battleR.v;
       angle = sim->battleR.angle;
+      minAngle = sim->battleR.minAngle;
     break;
     case 4:
       battleshipX = sim->battleS.x;
       battleshipY = sim->battleS.y;
       v = sim->battleS.v;
       angle = sim->battleS.angle;
+      minAngle = sim->battleS.minAngle;
     break;
   }
 
@@ -684,7 +700,7 @@ void impactED (SimState *sim, int battleshipType) // destroys escort D
   double dx = target_x - battleshipX;
   double dy = target_y - battleshipY;
   double distance = sqrt(pow(dx, 2) + pow(dy, 2));
-  if (distance < getRange(v, angle))
+  if (distance < getRange(v, angle, minAngle))
   {
     sim->escortD.state = 0; // that means destroyed
     timeBD = getTimeToTarget(v);
@@ -699,7 +715,7 @@ void impactEE (SimState *sim, int battleshipType) // destroys escort E
 {
   float battleshipX = 0;
   float battleshipY = 0;
-  float v, angle;
+  float v, angle, minAngle;
   int timeBE;
   switch(battleshipType)
   {
@@ -708,24 +724,28 @@ void impactEE (SimState *sim, int battleshipType) // destroys escort E
       battleshipY = sim->battleU.y;
       v = sim->battleU.v;
       angle = sim->battleU.angle;
+      minAngle = sim->battleU.minAngle;
     break;
     case 2:
       battleshipX = sim->battleM.x; 
       battleshipY = sim->battleM.y;
       v = sim->battleM.v;
       angle = sim->battleM.angle;
+      minAngle = sim->battleM.minAngle;
     break;
     case 3:
       battleshipX = sim->battleR.x;
       battleshipY = sim->battleR.y;
       v = sim->battleR.v;
       angle = sim->battleR.angle;
+      minAngle = sim->battleR.minAngle;
     break;
     case 4:
       battleshipX = sim->battleS.x;
       battleshipY = sim->battleS.y;
       v = sim->battleS.v;
       angle = sim->battleS.angle;
+      minAngle = sim->battleS.minAngle;
     break;
   }
 
@@ -735,7 +755,7 @@ void impactEE (SimState *sim, int battleshipType) // destroys escort E
   double dx = target_x - battleshipX;
   double dy = target_y - battleshipY;
   double distance = sqrt(pow(dx, 2) + pow(dy, 2));
-  if (distance < getRange(v, angle))
+  if (distance < getRange(v, angle, minAngle))
   {
     sim->escortE.state = 0; // that means destroyed
     timeBE = getTimeToTarget(v);
@@ -850,18 +870,34 @@ void iterations (SDL_Window *window, SDL_Renderer *renderer, SimState *sim, int 
     case 1:
       sim->battleU.x = battleshipXpos;
       sim->battleU.y = battleshipYpos;
+      if (iterationNum == 2)
+      {
+        sim->battleU.minAngle = 20 * (PI / 180);
+      }
     break;
     case 2:
       sim->battleM.x = battleshipXpos;
       sim->battleM.y = battleshipYpos;
+      if (iterationNum == 2)
+      {
+        sim->battleM.minAngle = 20 * (PI / 180);
+      }
     break;
     case 3:
       sim->battleR.x = battleshipXpos;
       sim->battleR.y = battleshipYpos;
+      if (iterationNum == 2)
+      {
+        sim->battleR.minAngle = 20 * (PI / 180);
+      }
     break;
     case 4:
       sim->battleS.x = battleshipXpos;
       sim->battleS.y = battleshipYpos;
+      if (iterationNum == 2)
+      {
+        sim->battleS.minAngle = 20 * (PI / 180);
+      }
     break;
   }
 
