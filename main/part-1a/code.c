@@ -17,7 +17,7 @@ typedef struct
 {
   int x, y;         // position
   short state;      // active or destroyed
-  char* timeActive; // time spent in simulator
+  int timeActive; // time spent in simulator
   char* name;       // name of escort ship       
   int id;           // unique id
   SDL_Texture *texE;// texture of escort ship
@@ -36,7 +36,7 @@ typedef struct
   float v;          // max (initial velocity) of battle ship
   SDL_Texture *texB;// texture of battleship
   char *name;
-  char* timeActive;
+  int timeActive;
   short state;
 } Battleship;
 
@@ -389,10 +389,10 @@ float getRange (float v, float angle)
   return (pow(v, 2) * sin(2 * angle)) / G;
 }
 
-float getTimeToTarget (float v) // this isn't executed at all !
+float getTimeToTarget (float v) // this returns value in ms
 {
   // printf("return value of time to tar: %f\n", 2 * vy / G);
-  return 2 * (v / G);
+  return (2 * (v / G)) * 1000;
 }
 
 float getRangeEscort(float v, float maxAngle, float minAngle) {
@@ -406,6 +406,7 @@ void impactB (SimState *sim, int escortType, int battleshipType, short *battlesh
   float escortshipX = 0;
   float escortshipY = 0;
   float v, maxAngle, minAngle;
+  int time;
   switch(escortType)
   {
     case 1:
@@ -477,6 +478,8 @@ void impactB (SimState *sim, int escortType, int battleshipType, short *battlesh
   if (distance > getRangeEscort(v, maxAngle, minAngle))
   {
     *battleshipState = 0;
+    time = getTimeToTarget(v);
+    SDL_Delay(time);
     //printf("BState: %hd\n", *battleshipState);
     printf("battleship destroyed!\n");
     SDL_DestroyTexture(battleshipTex);
@@ -490,6 +493,7 @@ void impactEA (SimState *sim, int battleshipType)
   float battleshipX = 0;
   float battleshipY = 0;
   float v, angle;
+  int timeBA;
   switch(battleshipType)
   {
     case 1:
@@ -527,6 +531,9 @@ void impactEA (SimState *sim, int battleshipType)
   if (distance < getRange(v, angle))
   {
     sim->escortA.state = 0; // that means destroyed
+    timeBA = getTimeToTarget(v);
+    sim->escortA.timeActive = timeBA;
+    SDL_Delay(timeBA);
     printf("escortA destroyed!\n");
     SDL_DestroyTexture(sim->escortA.texE);
   }
@@ -537,6 +544,7 @@ void impactEB (SimState *sim, int battleshipType)
   float battleshipX = 0;
   float battleshipY = 0;
   float v, angle;
+  int timeBB;
   switch(battleshipType)
   {
     case 1:
@@ -574,6 +582,9 @@ void impactEB (SimState *sim, int battleshipType)
   if (distance < getRange(v, angle))
   {
     sim->escortB.state = 0; // that means destroyed
+    timeBB = getTimeToTarget(v);
+    sim->escortB.timeActive = timeBB;
+    SDL_Delay(timeBB);
     printf("escortB destroyed!\n");
     SDL_DestroyTexture(sim->escortB.texE);
   }
@@ -584,6 +595,7 @@ void impactEC (SimState *sim, int battleshipType)
   float battleshipX = 0;
   float battleshipY = 0;
   float v, angle;
+  int timeBC;
   switch(battleshipType)
   {
     case 1:
@@ -621,6 +633,9 @@ void impactEC (SimState *sim, int battleshipType)
   if (distance < getRange(v, angle))
   {
     sim->escortC.state = 0; // that means destroyed
+    timeBC = getTimeToTarget(v);
+    sim->escortC.timeActive = timeBC;
+    SDL_Delay(timeBC);
     printf("escortC destroyed!\n");
     SDL_DestroyTexture(sim->escortC.texE);
   }
@@ -631,6 +646,7 @@ void impactED (SimState *sim, int battleshipType)
   float battleshipX = 0;
   float battleshipY = 0;
   float v, angle;
+  int timeBD;
   switch(battleshipType)
   {
     case 1:
@@ -668,6 +684,9 @@ void impactED (SimState *sim, int battleshipType)
   if (distance < getRange(v, angle))
   {
     sim->escortD.state = 0; // that means destroyed
+    timeBD = getTimeToTarget(v);
+    sim->escortD.timeActive = timeBD;
+    SDL_Delay(timeBD);
     printf("escortD destroyed!\n");
     SDL_DestroyTexture(sim->escortD.texE);
   }
@@ -678,6 +697,7 @@ void impactEE (SimState *sim, int battleshipType)
   float battleshipX = 0;
   float battleshipY = 0;
   float v, angle;
+  int timeBE;
   switch(battleshipType)
   {
     case 1:
@@ -715,6 +735,9 @@ void impactEE (SimState *sim, int battleshipType)
   if (distance < getRange(v, angle))
   {
     sim->escortE.state = 0; // that means destroyed
+    timeBE = getTimeToTarget(v);
+    sim->escortE.timeActive = timeBE;
+    SDL_Delay(timeBE);
     printf("escortE destroyed!\n");
     SDL_DestroyTexture(sim->escortE.texE);
   }
@@ -840,8 +863,14 @@ void playSimulation (int battleshipType)
     break;
   } 
 
+  // Time Calculations
+  time_t startSimTime, endSimTime;
+  double totalSimTime;
+  startSimTime = time(NULL);
+
   // Running events
   int done = 0;
+
   while (!done)
   {  
     // Check for events
@@ -883,8 +912,13 @@ void playSimulation (int battleshipType)
       impactB(&simState, simState.escortE.type, battleshipType, battleshipState); 
       simState.escortE.battleshipStatus = checkBattleState(&simState, battleshipState);
     }
+    SDL_Delay(3000);
+    done = 1;
   }
+  endSimTime = time(NULL);
 
+  totalSimTime = difftime(endSimTime, startSimTime) - 3000;
+  // due to the program not working properly when the delay is incoporated this part had to be added
 
   //printf("BS state: %hs", *battleshipState);// test
 
@@ -958,31 +992,46 @@ void playSimulation (int battleshipType)
   else
   {
     fprintf(battlefieldPtr, "Battleship has not been destroyed\n");
-
+    fprintf(battlefieldPtr, "Battle ends after %lf ms\n", totalSimTime);
 
     // Check if escort ships have been destroyed
     if (simState.escortA.state == 0)
+    {
       fprintf(battlefieldPtr, "%s, has been destroyed at (%d, %d)\n", simState.escortA.name, simState.escortA.x, simState.escortA.y);
+      fprintf(battlefieldPtr, "Ship spent %d in the battlefield\n\n", simState.escortA.timeActive);
+    }
     else 
       fprintf(battlefieldPtr, "%s, has not been destroyed at (%d, %d)\n", simState.escortA.name, simState.escortA.x, simState.escortA.y);
     
     if (simState.escortB.state == 0)
-      fprintf(battlefieldPtr, "%s, has been destroyed at (%d, %d)\n", simState.escortB.name, simState.escortB.x, simState.escortB.y);
+    {
+      fprintf(battlefieldPtr, "%s, has been destroyed at (%d, %d)\n", simState.escortB.name, simState.escortB.x, simState.escortB.y); 
+      fprintf(battlefieldPtr, "Ship spent %d in the battlefield\n\n", simState.escortB.timeActive);
+    }
     else
       fprintf(battlefieldPtr, "%s, has not been destroyed at (%d, %d)\n", simState.escortB.name, simState.escortB.x, simState.escortB.y);
 
     if (simState.escortC.state == 0)
-      fprintf(battlefieldPtr, "%s, has been destroyed at (%d, %d)\n", simState.escortC.name, simState.escortC.x, simState.escortC.y);
+    {
+      fprintf(battlefieldPtr, "%s, has been destroyed at (%d, %d)\n", simState.escortC.name, simState.escortC.x, simState.escortC.y); 
+      fprintf(battlefieldPtr, "Ship spent %d in the battlefield\n\n", simState.escortC.timeActive);
+    }
     else
       fprintf(battlefieldPtr, "%s, has not been destroyed at (%d, %d)\n", simState.escortC.name, simState.escortC.x, simState.escortC.y);
 
     if (simState.escortD.state == 0)
-      fprintf(battlefieldPtr, "%s, has been destroyed at (%d, %d)\n", simState.escortD.name, simState.escortD.x, simState.escortD.y);
+    {
+      fprintf(battlefieldPtr, "%s, has been destroyed at (%d, %d)\n", simState.escortD.name, simState.escortD.x, simState.escortD.y); 
+      fprintf(battlefieldPtr, "Ship spent %d in the battlefield\n\n", simState.escortD.timeActive);
+    }
     else
       fprintf(battlefieldPtr, "%s, has not been destroyed at (%d, %d)\n", simState.escortD.name, simState.escortD.x, simState.escortD.y);
 
     if (simState.escortE.state == 0)
-      fprintf(battlefieldPtr, "%s, has been destroyed at (%d, %d)\n", simState.escortE.name, simState.escortE.x, simState.escortE.y);
+    {
+      fprintf(battlefieldPtr, "%s, has been destroyed at (%d, %d)\n", simState.escortE.name, simState.escortE.x, simState.escortE.y); 
+      fprintf(battlefieldPtr, "Ship spent %d in the battlefield\n\n", simState.escortE.timeActive);
+    }
     else
       fprintf(battlefieldPtr, "%s, has not been destroyed at (%d, %d)\n", simState.escortE.name, simState.escortE.x, simState.escortE.y);
 
