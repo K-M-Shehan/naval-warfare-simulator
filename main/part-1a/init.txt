@@ -1,0 +1,16 @@
+
+---Initial Simulation Statistics---
+Battleship: 2, MS King George V, 35.000000, 0.785398, 50, 186 
+EscortshipA: 5, 1936A-class Destroyer, 6, 194, 20.331612, 0.331613, 20.000000, 42.000000
+EscortshipB: 5, Gabbiano-class Corvette, 206, 232, 30.157080, 0.157080, 30.000000, 27.000000
+EscortshipC: 5, Matsu-class Destroyer, 91, 16, 25.226892, 0.226893, 25.000000, 19.000000
+EscortshipD: 5, F-class Escort ships, 98, 161, 50.279251, 0.279253, 50.000000, 33.000000
+EscortshipE: 5, Japanese Kaibokan, 75, 68, 70.191986, 0.191986, 70.000000, 22.000000
+
+---Initial Simulation Statistics---
+Battleship: 1, USS Iowa (BB-61), 35.000000, 0.785398, 50, 186 
+EscortshipA: 5, 1936A-class Destroyer, 203, 234, 20.157080, 0.157080, 20.000000, 42.000000
+EscortshipB: 5, Gabbiano-class Corvette, 61, 212, 30.157080, 0.157080, 30.000000, 0.000000
+EscortshipC: 5, Matsu-class Destroyer, 199, 131, 25.052361, 0.052360, 25.000000, 12.000000
+EscortshipD: 5, F-class Escort ships, 157, 63, 50.157078, 0.157080, 50.000000, 16.000000
+EscortshipE: 5, Japanese Kaibokan, 193, 178, 70.069817, 0.069813, 70.000000, 28.000000
