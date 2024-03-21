@@ -26,7 +26,8 @@ typedef struct
   float angleR;         // Angle Range (maxAngle - minAngle)
   float v;              // MAX velocity (initial)
   int type;             // type of escort A,B,C,D,E (denoted with numbers 1-5)
-  int battleshipStatus; // to check if escort has taken down the battleship
+  int battleshipStatus; // to check if escort has hit the battleship
+  float impactPower;      // impact power of shells
 } EscortShip;
 
 typedef struct
@@ -38,7 +39,7 @@ typedef struct
   SDL_Texture *texB;// texture of battleship
   char *name;       // name of the battleship
   int timeActive;   // time spent in simulator
-  short state;      // active or destroyed
+  float health;      // active or destroyed -> health = 1
 } Battleship;
 
 typedef struct
@@ -276,12 +277,19 @@ void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer, int bat
   sim->escortD.state = 1; // D
   sim->escortE.state = 1; // E
   
-  // state of battlships (1 = alive, 0 = destroyed)
-  sim->battleU.state = 1;    // U
-  sim->battleM.state = 1;    // M
-  sim->battleR.state = 1;    // R
-  sim->battleS.state = 1;    // S
+  // state of battlships (1 = full health, health decreases when hit)
+  sim->battleU.health = 1;    // U
+  sim->battleM.health = 1;    // M
+  sim->battleR.health = 1;    // R
+  sim->battleS.health = 1;    // S
 
+  // impact power of escorts
+  sim->escortA.impactPower = 0.08;  // A
+  sim->escortB.impactPower = 0.06;  // B
+  sim->escortC.impactPower = 0.07;  // C
+  sim->escortD.impactPower = 0.05;  // D
+  sim->escortE.impactPower = 0.04;  // E
+  
   // angle of battleships
   sim->battleU.angle = PI / 4;    // U
   sim->battleM.angle = PI / 4;    // M
@@ -394,7 +402,7 @@ void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer, int bat
 float getTimeToTarget (float v) // this returns time in ms
 {
   // printf("return value of time to tar: %f\n", 2 * vy / G);
-  return (2 * (v / G)) * 1000;
+  return fabs((2 * (v / G)) * 1000);
 }
 
 float getRange (float v, float maxAngle, float minAngle) // returns range for escort ships
@@ -404,48 +412,60 @@ float getRange (float v, float maxAngle, float minAngle) // returns range for es
   return fabs(maxRange - minRange);
 }
 
-void impactB (SimState *sim, int escortType, int battleshipType, short *battleshipState) // destroys battleship
+void impactB (SimState *sim, int escortType, int battleshipType, float *battleshipHealth) // hits battleship, and decreases health
 {
+  char *escortName;
   float escortshipX = 0;
   float escortshipY = 0;
   float v, maxAngle, minAngle;
   int time;
+  float impactPower;
   switch(escortType)
   {
     case 1:
+      escortName = sim->escortA.name;
       escortshipX = sim->escortA.x;
       escortshipY = sim->escortA.y;
       v = sim->escortA.v;
       maxAngle = sim->escortA.maxAngle;
       minAngle = sim->escortA.minAngle;
+      impactPower = sim->escortA.impactPower;
     break;
     case 2:
+      escortName = sim->escortB.name;
       escortshipX = sim->escortB.x;
       escortshipY = sim->escortB.y;
       v = sim->escortB.v;
       maxAngle = sim->escortB.maxAngle;
       minAngle = sim->escortB.minAngle;
+      impactPower = sim->escortB.impactPower;
     break;
-    case 3:
+    case 3: 
+      escortName = sim->escortC.name;
       escortshipX = sim->escortC.x;
       escortshipY = sim->escortC.y;
       v = sim->escortB.v;
       maxAngle = sim->escortC.maxAngle;
       minAngle = sim->escortC.minAngle;
+      impactPower = sim->escortC.impactPower;
     break;
     case 4:
+      escortName = sim->escortD.name;
       escortshipX = sim->escortD.x;
       escortshipY = sim->escortD.y;
       v = sim->escortD.v;
       maxAngle = sim->escortD.maxAngle;
       minAngle = sim->escortD.minAngle;
+      impactPower = sim->escortD.impactPower;
     break;
     case 5:
+      escortName = sim->escortE.name;
       escortshipX = sim->escortE.x;
       escortshipY = sim->escortE.y;
       v = sim->escortE.v;
       maxAngle = sim->escortE.maxAngle;
       minAngle = sim->escortE.minAngle;
+      impactPower = sim->escortE.impactPower;
     break;
   }
 
@@ -480,12 +500,15 @@ void impactB (SimState *sim, int escortType, int battleshipType, short *battlesh
   double distance = sqrt(pow(dx, 2) + pow(dy, 2));
   if (distance > getRange(v, maxAngle, minAngle))
   {
-    *battleshipState = 0;
+    *battleshipHealth -= impactPower;
     time = getTimeToTarget(v);
     SDL_Delay(time);
     //printf("BState: %hd\n", *battleshipState);
-    printf("battleship destroyed!\n");
-    SDL_DestroyTexture(battleshipTex);
+    printf("battleship hit by %s!\n", escortName);
+    if (*battleshipHealth == 0)
+    {
+      SDL_DestroyTexture(battleshipTex);
+    }
   }
 }
 
@@ -849,27 +872,32 @@ void doRender (SDL_Renderer* renderer, SimState* sim, int battleshipType) // ren
   SDL_RenderPresent(renderer);
 }
 
-int checkBattleState(SimState *sim, short *battleshipState) // checks if battleship is destroyed
+int checkBattleState(SimState *sim, float battleshipPrevHealth, float *battleshipHealth) // checks if battleship is destroyed
 {
-  if(battleshipState == 0)
+  if(*battleshipHealth < battleshipPrevHealth)
   {
-    return 0; // this will be saved in struct of escort
+    return 0; // battleship hit, this will be saved in struct of escort
   }
-  return 1;
+  else
+  {
+    return 1;
+  }
 }
 
-void iterations (SDL_Window *window, SDL_Renderer *renderer, SimState *sim, int battleshipType, short *battleshipState, int iterationNum, int battleshipXpos, int battleshipYpos)
+void iterations (SDL_Window *window, SDL_Renderer *renderer, SimState *sim, int battleshipType, float *battleshipHealth, int iterationNum, int battleshipXpos, int battleshipYpos)
 {
   // Time Calculations
   time_t startSimTime, endSimTime;
   double totalSimTime;
   startSimTime = time(NULL);
+  float battleshipPrevHealth;
 
   switch(battleshipType)
   {
     case 1:
       sim->battleU.x = battleshipXpos;
       sim->battleU.y = battleshipYpos;
+      battleshipPrevHealth = sim->battleU.health; 
       if (iterationNum == 2)
       {
         sim->battleU.minAngle = 20 * (PI / 180);
@@ -878,6 +906,7 @@ void iterations (SDL_Window *window, SDL_Renderer *renderer, SimState *sim, int 
     case 2:
       sim->battleM.x = battleshipXpos;
       sim->battleM.y = battleshipYpos;
+      battleshipPrevHealth = sim->battleM.health; 
       if (iterationNum == 2)
       {
         sim->battleM.minAngle = 20 * (PI / 180);
@@ -886,6 +915,7 @@ void iterations (SDL_Window *window, SDL_Renderer *renderer, SimState *sim, int 
     case 3:
       sim->battleR.x = battleshipXpos;
       sim->battleR.y = battleshipYpos;
+      battleshipPrevHealth = sim->battleR.health; 
       if (iterationNum == 2)
       {
         sim->battleR.minAngle = 20 * (PI / 180);
@@ -894,6 +924,7 @@ void iterations (SDL_Window *window, SDL_Renderer *renderer, SimState *sim, int 
     case 4:
       sim->battleS.x = battleshipXpos;
       sim->battleS.y = battleshipYpos;
+      battleshipPrevHealth = sim->battleS.health; 
       if (iterationNum == 2)
       {
         sim->battleS.minAngle = 20 * (PI / 180);
@@ -923,32 +954,37 @@ void iterations (SDL_Window *window, SDL_Renderer *renderer, SimState *sim, int 
     
     if (sim->escortA.state == 1)
     {
-      impactB(sim, sim->escortA.type, battleshipType, battleshipState); 
-      sim->escortA.battleshipStatus = checkBattleState(sim, battleshipState);
+      impactB(sim, sim->escortA.type, battleshipType, battleshipHealth); 
+      sim->escortA.battleshipStatus = checkBattleState(sim, battleshipPrevHealth, battleshipHealth);
+      battleshipPrevHealth = *battleshipHealth;
     }
 
     if (sim->escortB.state == 1)
     {
-      impactB(sim, sim->escortB.type, battleshipType, battleshipState);
-      sim->escortB.battleshipStatus = checkBattleState(sim, battleshipState);
+      impactB(sim, sim->escortB.type, battleshipType, battleshipHealth);
+      sim->escortB.battleshipStatus = checkBattleState(sim, battleshipPrevHealth, battleshipHealth);
+      battleshipPrevHealth = *battleshipHealth;
     }
 
     if (sim->escortC.state == 1)
     {
-      impactB(sim, sim->escortC.type, battleshipType, battleshipState);
-      sim->escortC.battleshipStatus = checkBattleState(sim, battleshipState);
+      impactB(sim, sim->escortC.type, battleshipType, battleshipHealth);
+      sim->escortC.battleshipStatus = checkBattleState(sim, battleshipPrevHealth, battleshipHealth);
+      battleshipPrevHealth = *battleshipHealth;
     }
 
     if (sim->escortD.state == 1)
     {
-      impactB(sim, sim->escortD.type, battleshipType, battleshipState);
-      sim->escortD.battleshipStatus = checkBattleState(sim, battleshipState);
+      impactB(sim, sim->escortD.type, battleshipType, battleshipHealth);
+      sim->escortD.battleshipStatus = checkBattleState(sim, battleshipPrevHealth, battleshipHealth);
+      battleshipPrevHealth = *battleshipHealth;
     }
 
     if (sim->escortE.state == 1)
     {
-      impactB(sim, sim->escortE.type, battleshipType, battleshipState); 
-      sim->escortE.battleshipStatus = checkBattleState(sim, battleshipState);
+      impactB(sim, sim->escortE.type, battleshipType, battleshipHealth); 
+      sim->escortE.battleshipStatus = checkBattleState(sim, battleshipPrevHealth, battleshipHealth);
+      battleshipPrevHealth = *battleshipHealth;
     }
     SDL_Delay(3000);
     done = 1;
@@ -972,30 +1008,30 @@ void iterations (SDL_Window *window, SDL_Renderer *renderer, SimState *sim, int 
   fprintf(battlefieldPtr, "\n---BATTLE FIELD SIMULATION %d  RESULT---\n", iterationNum);
   
   // Check if battleship was destroyed
-  if (*battleshipState == 0)
+  if (*battleshipHealth == 0)
   {
     fprintf(battlefieldPtr, "Battleship has sunk\n");
 
     // Check which escort has taken down the battleship
     if (sim->escortA.battleshipStatus == 0)
     {
-      fprintf(battlefieldPtr, "%s, has destroyed the battleship\n", sim->escortA.name);      
+      fprintf(battlefieldPtr, "%s, has hit the battleship\n", sim->escortA.name);      
     }
     if (sim->escortB.battleshipStatus == 0)
     {
-      fprintf(battlefieldPtr, "%s, has destroyed the battleship\n", sim->escortB.name);      
+      fprintf(battlefieldPtr, "%s, has hit the battleship\n", sim->escortB.name);      
     }
     if (sim->escortC.battleshipStatus == 0)
     {
-      fprintf(battlefieldPtr, "%s, has destroyed the battleship\n", sim->escortC.name);      
+      fprintf(battlefieldPtr, "%s, has hit the battleship\n", sim->escortC.name);      
     }
     if (sim->escortD.battleshipStatus == 0)
     {
-      fprintf(battlefieldPtr, "%s, has destroyed the battleship\n", sim->escortD.name);      
+      fprintf(battlefieldPtr, "%s, has hit the battleship\n", sim->escortD.name);      
     }
     if (sim->escortE.battleshipStatus == 0)
     {
-      fprintf(battlefieldPtr, "%s, has destroyed the battleship\n", sim->escortE.name);      
+      fprintf(battlefieldPtr, "%s, has hit the battleship\n", sim->escortE.name);      
     }
 
 
@@ -1034,7 +1070,7 @@ void iterations (SDL_Window *window, SDL_Renderer *renderer, SimState *sim, int 
     if (sim->escortA.state == 0)
     {
       fprintf(battlefieldPtr, "%s, has been destroyed at (%d, %d)\n", sim->escortA.name, sim->escortA.x, sim->escortA.y);
-      fprintf(battlefieldPtr, "Ship spent %d in the battlefield\n\n", sim->escortA.timeActive);
+      fprintf(battlefieldPtr, "%s Ship spent %d in the battlefield\n\n", sim->escortA.name, sim->escortA.timeActive);
     }
     else 
       fprintf(battlefieldPtr, "%s, has not been destroyed at (%d, %d)\n", sim->escortA.name, sim->escortA.x, sim->escortA.y);
@@ -1042,7 +1078,7 @@ void iterations (SDL_Window *window, SDL_Renderer *renderer, SimState *sim, int 
     if (sim->escortB.state == 0)
     {
       fprintf(battlefieldPtr, "%s, has been destroyed at (%d, %d)\n", sim->escortB.name, sim->escortB.x, sim->escortB.y); 
-      fprintf(battlefieldPtr, "Ship spent %d in the battlefield\n\n", sim->escortB.timeActive);
+      fprintf(battlefieldPtr, "%s Ship spent %d in the battlefield\n\n", sim->escortB.name, sim->escortB.timeActive);
     }
     else
       fprintf(battlefieldPtr, "%s, has not been destroyed at (%d, %d)\n", sim->escortB.name, sim->escortB.x, sim->escortB.y);
@@ -1050,7 +1086,7 @@ void iterations (SDL_Window *window, SDL_Renderer *renderer, SimState *sim, int 
     if (sim->escortC.state == 0)
     {
       fprintf(battlefieldPtr, "%s, has been destroyed at (%d, %d)\n", sim->escortC.name, sim->escortC.x, sim->escortC.y); 
-      fprintf(battlefieldPtr, "Ship spent %d in the battlefield\n\n", sim->escortC.timeActive);
+      fprintf(battlefieldPtr, "%s Ship spent %d in the battlefield\n\n", sim->escortC.name, sim->escortC.timeActive);
     }
     else
       fprintf(battlefieldPtr, "%s, has not been destroyed at (%d, %d)\n", sim->escortC.name, sim->escortC.x, sim->escortC.y);
@@ -1058,7 +1094,7 @@ void iterations (SDL_Window *window, SDL_Renderer *renderer, SimState *sim, int 
     if (sim->escortD.state == 0)
     {
       fprintf(battlefieldPtr, "%s, has been destroyed at (%d, %d)\n", sim->escortD.name, sim->escortD.x, sim->escortD.y); 
-      fprintf(battlefieldPtr, "Ship spent %d in the battlefield\n\n", sim->escortD.timeActive);
+      fprintf(battlefieldPtr, "%s Ship spent %d in the battlefield\n\n", sim->escortD.name, sim->escortD.timeActive);
     }
     else
       fprintf(battlefieldPtr, "%s, has not been destroyed at (%d, %d)\n", sim->escortD.name, sim->escortD.x, sim->escortD.y);
@@ -1066,10 +1102,11 @@ void iterations (SDL_Window *window, SDL_Renderer *renderer, SimState *sim, int 
     if (sim->escortE.state == 0)
     {
       fprintf(battlefieldPtr, "%s, has been destroyed at (%d, %d)\n", sim->escortE.name, sim->escortE.x, sim->escortE.y); 
-      fprintf(battlefieldPtr, "Ship spent %d in the battlefield\n\n", sim->escortE.timeActive);
+      fprintf(battlefieldPtr, "%s Ship spent %d in the battlefield\n\n",sim->escortE.name, sim->escortE.timeActive);
     }
     else
       fprintf(battlefieldPtr, "%s, has not been destroyed at (%d, %d)\n", sim->escortE.name, sim->escortE.x, sim->escortE.y);
+
   }
   fclose(battlefieldPtr);
 }
@@ -1100,29 +1137,39 @@ void playSimulation (int battleshipType)  // this is the simulation (does most o
    
   loadSim(&simState, window, renderer, battleshipType); // battleshipType to append inital info into file
 
-  short *battleshipState;
+  float *battleshipHealth;
   switch(battleshipType)
   {
     case 1:
-      battleshipState = &simState.battleU.state; 
+      battleshipHealth = &simState.battleU.health; 
     break;
     case 2:
-      battleshipState = &simState.battleM.state; 
+      battleshipHealth = &simState.battleM.health; 
     break;
     case 3:
-      battleshipState = &simState.battleR.state; 
+      battleshipHealth = &simState.battleR.health; 
     break;
     case 4:
-      battleshipState = &simState.battleR.state; 
+      battleshipHealth = &simState.battleR.health; 
     break;
   } 
 
 
-  iterations(window, renderer, &simState, battleshipType, battleshipState, 1, 50, WINDOW_SIZE - (64+50)); 
+  iterations(window, renderer, &simState, battleshipType, battleshipHealth, 1, 50, WINDOW_SIZE - (64+50)); 
   
-  if (*battleshipState == 1)
+  if (*battleshipHealth != 0)
   {
-    iterations(window, renderer, &simState, battleshipType, battleshipState, 2, WINDOW_SIZE - 50, WINDOW_SIZE - (64+50));
+    iterations(window, renderer, &simState, battleshipType, battleshipHealth, 2, WINDOW_SIZE - (64+50), WINDOW_SIZE - (64+50));
+    FILE *battlefieldPtr;
+    battlefieldPtr = fopen("battlefield.txt", "a");
+    if (battlefieldPtr == NULL)
+    {
+      printf("File cannot be created\n");
+      exit(1);
+    }
+
+    fprintf(battlefieldPtr, "Total destruction on battleship: %f %%\n", (1 - *battleshipHealth) * 100);
+    fclose(battlefieldPtr);
   }
   else
   { 
@@ -1134,7 +1181,7 @@ void playSimulation (int battleshipType)  // this is the simulation (does most o
       exit(1);
     }
 
-    fprintf(battlefieldPtr, "---SIMULATION 2 WAS NOT COMMENCED DUE TO BATTLESHIP BEING DESTROYED---");
+    fprintf(battlefieldPtr, "---SIMULATION 2 WAS NOT COMMENCED DUE TO BATTLESHIP BEING DESTROYED---\n");
     fclose(battlefieldPtr);
   }
 
