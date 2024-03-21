@@ -8,6 +8,8 @@
 #include <time.h>
 #define WINDOW_SIZE 300
 #define PI 3.14159265
+#define MAX_LINE_LENGTH 150
+#define BATTLEFIELD_LINES 31
 
 const float G = 9.8f; // Gravitational acceleration
 
@@ -1287,7 +1289,7 @@ void viewInstructions() // part of main menu
   printf("\nInstructions:\n");
   printf("To start the simulation, first you must select a battleship type to be deloyed\n");
   printf("You will be able to see what escort ships are destroyed and if battleship is destroyed through the terminal\n");
-  printf("For more info open the battlefield.txt file in the same directory as the program\n");
+  printf("For more info you can choose 'Simulation Statistics' from the menu or open the battlefield.txt file in the same directory as the program\n");
   printf("To exit from the simulation window, wait for a few seconds and it will close automatically once simulation is complete, afterwards you will be directed back to the menu\n");
   printf("To view Initial statistics you can open the init.txt file\n");
 }
@@ -1295,7 +1297,36 @@ void viewInstructions() // part of main menu
 void simulationStats() // part of main menu
 {
   printf("\nSimulation Stats:\n");
-  printf("To see old simulation statistics you can open the battlefield.txt\n");
+  printf("Statistics of previous simulation\n");
+  FILE *battlefieldPtr;
+  char line[MAX_LINE_LENGTH];
+  long fileSize, current;
+  int numNewlines = 0;
+  battlefieldPtr = fopen("battlefield.txt", "r");
+  if (battlefieldPtr == NULL)
+  {
+    printf("File cannot be created\n");
+    exit(1);
+  }
+  fseek(battlefieldPtr, 0, SEEK_END);
+  fileSize = ftell(battlefieldPtr);
+  current = fileSize;
+  while (current > 0 && numNewlines < BATTLEFIELD_LINES)
+  {
+    current--;
+    fseek(battlefieldPtr, current, SEEK_SET);
+    if (fgetc(battlefieldPtr) == '\n')
+    {
+      numNewlines++;
+    }
+  }
+  fseek(battlefieldPtr, current, SEEK_SET);
+  while (fgets(line, sizeof(line), battlefieldPtr) != NULL)
+  {
+    printf("%s", line);
+  }
+  fclose(battlefieldPtr);
+  printf("To see older simulation statistics you can open the battlefield.txt\n");
   printf("This file can be found in the same directory as the program\n");
   printf("Battlefield.txt has records of all the past simulations done with the simulator\n");
 }
