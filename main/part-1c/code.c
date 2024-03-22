@@ -279,7 +279,7 @@ void loadSim (SimState *sim, SDL_Window *window, SDL_Renderer *renderer, int bat
   sim->escortD.state = 1; // D
   sim->escortE.state = 1; // E
   
-  // state of battlships (1 = full health, health decreases when hit)
+  // health of battlships (1 = full health, health decreases when hit)
   sim->battleU.health = 1;    // U
   sim->battleM.health = 1;    // M
   sim->battleR.health = 1;    // R
@@ -886,7 +886,7 @@ int checkBattleState(SimState *sim, float battleshipPrevHealth, float *battleshi
   }
 }
 
-void iterations (SDL_Window *window, SDL_Renderer *renderer, SimState *sim, int battleshipType, float *battleshipHealth, int iterationNum, int battleshipXpos, int battleshipYpos)
+void iterations (SDL_Window *window, SDL_Renderer *renderer, SimState *sim, int battleshipType, float *battleshipHealth, int iterationNum, int battleshipXpos, int battleshipYpos)  // to change positions of the battleship for the next iteration
 {
   // Time Calculations
   time_t startSimTime, endSimTime;
@@ -941,7 +941,6 @@ void iterations (SDL_Window *window, SDL_Renderer *renderer, SimState *sim, int 
   {  
     // Check for events
     done = processEvents(window, sim);
-    //int battleshipType = 1;
     doRender(renderer, sim, battleshipType); // the 3rd arg is the battleship type (using ints for now)
     if (sim->escortA.state == 1)
       impactEA(sim, battleshipType);
