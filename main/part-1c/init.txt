@@ -216,3 +216,93 @@ EscortshipD:
 Name: F-class Escort ships	 Position: (60, 233)	  Max angle: 1.186824	 Min angle: 0.314159	 Angle Range: 0.872665	 Velocity: 28.000000 
 EscortshipE: 
 Name: Japanese Kaibokan		 Position: (170, 35)	  Max angle: 1.274090	 Min angle: 0.052360	 Angle Range: 1.221730	 Velocity: 33.000000 
+
+---Initial Simulation Statistics---
+Battleship: 
+Type: 1	 Name: USS Iowa (BB-61)	 Velocity: 35.000000	 Angle: 0.785398	 Position: (50, 186) 
+Number of Escortships in battlefield: 5
+EscortshipA: 
+Name: 1936A-class Destroyer	 Position: (81, 68)	  Max angle: 0.506145	 Min angle: 0.157080	 Angle Range: 0.349066	 Velocity: 42.000000 
+EscortshipB: 
+Name: Gabbiano-class Corvette	 Position: (139, 94)	  Max angle: 0.575959	 Min angle: 0.052360	 Angle Range: 0.523599	 Velocity: 14.000000 
+EscortshipC: 
+Name: Matsu-class Destroyer	 Position: (37, 99)	  Max angle: 0.471239	 Min angle: 0.034907	 Angle Range: 0.436332	 Velocity: 28.000000 
+EscortshipD: 
+Name: F-class Escort ships	 Position: (181, 209)	  Max angle: 1.204277	 Min angle: 0.331613	 Angle Range: 0.872665	 Velocity: 31.000000 
+EscortshipE: 
+Name: Japanese Kaibokan		 Position: (57, 25)	  Max angle: 1.466077	 Min angle: 0.244346	 Angle Range: 1.221730	 Velocity: 0.000000 
+
+---Initial Simulation Statistics---
+Battleship: 
+Type: 1	 Name: USS Iowa (BB-61)	 Velocity: 35.000000	 Angle: 0.785398	 Position: (50, 186) 
+Number of Escortships in battlefield: 5
+EscortshipA: 
+Name: 1936A-class Destroyer	 Position: (114, 109)	  Max angle: 0.436332	 Min angle: 0.087266	 Angle Range: 0.349066	 Velocity: 42.000000 
+EscortshipB: 
+Name: Gabbiano-class Corvette	 Position: (74, 195)	  Max angle: 0.733038	 Min angle: 0.209440	 Angle Range: 0.523599	 Velocity: 6.000000 
+EscortshipC: 
+Name: Matsu-class Destroyer	 Position: (74, 182)	  Max angle: 0.593412	 Min angle: 0.157080	 Angle Range: 0.436332	 Velocity: 32.000000 
+EscortshipD: 
+Name: F-class Escort ships	 Position: (156, 230)	  Max angle: 0.890118	 Min angle: 0.017453	 Angle Range: 0.872665	 Velocity: 11.000000 
+EscortshipE: 
+Name: Japanese Kaibokan		 Position: (38, 169)	  Max angle: 1.239184	 Min angle: 0.017453	 Angle Range: 1.221730	 Velocity: 21.000000 
+
+---Initial Simulation Statistics---
+Battleship: 
+Type: 1	 Name: USS Iowa (BB-61)	 Velocity: 35.000000	 Angle: 0.785398	 Position: (50, 186) 
+Number of Escortships in battlefield: 5
+EscortshipA: 
+Name: 1936A-class Destroyer	 Position: (175, 105)	  Max angle: 0.558505	 Min angle: 0.209440	 Angle Range: 0.349066	 Velocity: 42.000000 
+EscortshipB: 
+Name: Gabbiano-class Corvette	 Position: (215, 34)	  Max angle: 0.698132	 Min angle: 0.174533	 Angle Range: 0.523599	 Velocity: 22.000000 
+EscortshipC: 
+Name: Matsu-class Destroyer	 Position: (73, 1)	  Max angle: 0.733038	 Min angle: 0.296706	 Angle Range: 0.436332	 Velocity: 18.000000 
+EscortshipD: 
+Name: F-class Escort ships	 Position: (150, 87)	  Max angle: 0.977384	 Min angle: 0.104720	 Angle Range: 0.872665	 Velocity: 21.000000 
+EscortshipE: 
+Name: Japanese Kaibokan		 Position: (121, 44)	  Max angle: 1.378810	 Min angle: 0.157080	 Angle Range: 1.221730	 Velocity: 11.000000 
+
+---Initial Simulation Statistics---
+Battleship: 
+Type: 2	 Name: MS King George V	 Velocity: 35.000000	 Angle: 0.785398	 Position: (50, 186) 
+Number of Escortships in battlefield: 5
+EscortshipA: 
+Name: 1936A-class Destroyer	 Position: (200, 189)	  Max angle: 0.366519	 Min angle: 0.017453	 Angle Range: 0.349066	 Velocity: 42.000000 
+EscortshipB: 
+Name: Gabbiano-class Corvette	 Position: (153, 91)	  Max angle: 0.663225	 Min angle: 0.139626	 Angle Range: 0.523599	 Velocity: 20.000000 
+EscortshipC: 
+Name: Matsu-class Destroyer	 Position: (86, 145)	  Max angle: 0.436332	 Min angle: 0.000000	 Angle Range: 0.436332	 Velocity: 13.000000 
+EscortshipD: 
+Name: F-class Escort ships	 Position: (88, 134)	  Max angle: 1.047198	 Min angle: 0.174533	 Angle Range: 0.872665	 Velocity: 22.000000 
+EscortshipE: 
+Name: Japanese Kaibokan		 Position: (83, 195)	  Max angle: 1.343904	 Min angle: 0.122173	 Angle Range: 1.221730	 Velocity: 7.000000 
+
+---Initial Simulation Statistics---
+Battleship: 
+Type: 3	 Name: Richelieu	 Velocity: 35.000000	 Angle: 0.785398	 Position: (50, 186) 
+Number of Escortships in battlefield: 5
+EscortshipA: 
+Name: 1936A-class Destroyer	 Position: (155, 52)	  Max angle: 0.453786	 Min angle: 0.104720	 Angle Range: 0.349066	 Velocity: 42.000000 
+EscortshipB: 
+Name: Gabbiano-class Corvette	 Position: (134, 60)	  Max angle: 0.523599	 Min angle: 0.000000	 Angle Range: 0.523599	 Velocity: 12.000000 
+EscortshipC: 
+Name: Matsu-class Destroyer	 Position: (136, 156)	  Max angle: 0.767945	 Min angle: 0.331613	 Angle Range: 0.436332	 Velocity: 25.000000 
+EscortshipD: 
+Name: F-class Escort ships	 Position: (194, 80)	  Max angle: 0.994838	 Min angle: 0.122173	 Angle Range: 0.872665	 Velocity: 18.000000 
+EscortshipE: 
+Name: Japanese Kaibokan		 Position: (216, 216)	  Max angle: 1.396263	 Min angle: 0.174533	 Angle Range: 1.221730	 Velocity: 7.000000 
+
+---Initial Simulation Statistics---
+Battleship: 
+Type: 4	 Name: Sovetsky Soyuz-class	 Velocity: 35.000000	 Angle: 0.785398	 Position: (50, 186) 
+Number of Escortships in battlefield: 5
+EscortshipA: 
+Name: 1936A-class Destroyer	 Position: (43, 111)	  Max angle: 0.436332	 Min angle: 0.087266	 Angle Range: 0.349066	 Velocity: 42.000000 
+EscortshipB: 
+Name: Gabbiano-class Corvette	 Position: (5, 206)	  Max angle: 0.575959	 Min angle: 0.052360	 Angle Range: 0.523599	 Velocity: 7.000000 
+EscortshipC: 
+Name: Matsu-class Destroyer	 Position: (208, 45)	  Max angle: 0.488692	 Min angle: 0.052360	 Angle Range: 0.436332	 Velocity: 34.000000 
+EscortshipD: 
+Name: F-class Escort ships	 Position: (7, 103)	  Max angle: 0.890118	 Min angle: 0.017453	 Angle Range: 0.872665	 Velocity: 12.000000 
+EscortshipE: 
+Name: Japanese Kaibokan		 Position: (24, 62)	  Max angle: 1.518436	 Min angle: 0.296706	 Angle Range: 1.221730	 Velocity: 1.000000 
