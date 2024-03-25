@@ -9,7 +9,7 @@
 #define WINDOW_SIZE 300
 #define PI 3.14159265
 #define MAX_LINE_LENGTH 150
-#define BATTLEFIELD_LINES 31
+#define BATTLEFIELD_LINES 35
 
 const float G = 9.8f; // Gravitational acceleration
 
@@ -407,7 +407,7 @@ float getTimeToTarget (float v) // this returns time in ms
   return fabs((2 * (v / G)) * 1000);
 }
 
-float getRange (float v, float maxAngle, float minAngle) // returns range for escort ships
+float getRange (float v, float maxAngle, float minAngle) // returns range for ships
 {
   float maxRange = (pow(v, 2) * sin(2 * maxAngle)) / G;
   float minRange = (pow(v, 2) * sin(2 * minAngle)) / G;
@@ -500,7 +500,7 @@ void impactB (SimState *sim, int escortType, int battleshipType, float *battlesh
   double dx = target_x - escortshipX;
   double dy = target_y - escortshipY;
   double distance = sqrt(pow(dx, 2) + pow(dy, 2));
-  if (distance > getRange(v, maxAngle, minAngle))
+  if (distance < getRange(v, maxAngle, minAngle))
   {
     *battleshipHealth -= impactPower;
     time = getTimeToTarget(v);
@@ -992,7 +992,7 @@ void iterations (SDL_Window *window, SDL_Renderer *renderer, SimState *sim, int 
   }
   endSimTime = time(NULL);
 
-  totalSimTime = difftime(endSimTime, startSimTime) - 3000;
+  totalSimTime = difftime(endSimTime, startSimTime); // - 3000;
   // due to the program not working properly when the delay is incomporated, i added a line 5 lines above this (done = 1) to exit the loop
 
   //printf("BS state: %hi\n", *battleshipState); // for dev use uncomment this and check if battleship is truly destroyed
