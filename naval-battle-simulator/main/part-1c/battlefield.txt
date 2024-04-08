@@ -376,3 +376,34 @@ Matsu-class Destroyer, has not been destroyed at (208, 45)
 F-class Escort ships, has not been destroyed at (7, 103)
 Japanese Kaibokan, has not been destroyed at (24, 62)
 Total destruction on battleship: 0.000000 %
+
+---BATTLE FIELD SIMULATION 1  RESULT---
+Battleship has not been destroyed
+Battle ends after 24.000000 ms
+1936A-class Destroyer, has been destroyed at (201, 232)
+1936A-class Destroyer Ship spent 7142 in the battlefield
+
+Gabbiano-class Corvette, has not been destroyed at (59, 40)
+Matsu-class Destroyer, has been destroyed at (50, 173)
+Matsu-class Destroyer Ship spent 7142 in the battlefield
+
+F-class Escort ships, has not been destroyed at (113, 89)
+Japanese Kaibokan, has been destroyed at (47, 106)
+Japanese Kaibokan Ship spent 7142 in the battlefield
+
+
+---BATTLE FIELD SIMULATION 2  RESULT---
+Battleship has not been destroyed
+Battle ends after 3.000000 ms
+1936A-class Destroyer, has been destroyed at (201, 232)
+1936A-class Destroyer Ship spent 7142 in the battlefield
+
+Gabbiano-class Corvette, has not been destroyed at (59, 40)
+Matsu-class Destroyer, has been destroyed at (50, 173)
+Matsu-class Destroyer Ship spent 7142 in the battlefield
+
+F-class Escort ships, has not been destroyed at (113, 89)
+Japanese Kaibokan, has been destroyed at (47, 106)
+Japanese Kaibokan Ship spent 7142 in the battlefield
+
+Total destruction on battleship: 0.000000 %
