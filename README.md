@@ -1,6 +1,6 @@
 # c-projects
 
-## 1 Naval Battle Simulator
+## 1. Naval Battle Simulator
 
 <p align = "center">
     <img src="https://imgur.com/HSDL9ws.png" alt="sim"/>
