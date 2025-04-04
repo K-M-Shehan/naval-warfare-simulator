@@ -26,6 +26,7 @@ To get started with the naval warfare simulator, follow these steps:
 To run the simulator, execute the following command:
 ```sh
 ./game
+```
 
 ## Overview
 1 Battleship and several escorts.
