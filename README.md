@@ -15,7 +15,7 @@ To get started with the naval warfare simulator, follow these steps:
     ```
 2. Navigate to the project directory:
     ```sh
-    cd naval-warfare-simulator
+    cd main/part1-c
     ```
 3. Compile the project using Makefile:
     ```sh
